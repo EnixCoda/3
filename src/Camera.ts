@@ -34,8 +34,6 @@ export class Camera {
     if (direction) this.direction = direction;
     else if (target) this.direction = this.targetAt(target);
     else throw new Error(`No direction set`);
-
-    this.getCorners();
   }
 
   lookTo(direction: Direction) {
@@ -53,23 +51,16 @@ export class Camera {
     height: number,
     processor: (x: number, y: number, ray: Ray) => void
   ) {
-    // safe to ignore bottom right as viewport is rectangle
     const [topLeft, topRight, bottomLeft, bottomRight] = this.getCorners();
-    const horizon = topRight.sub(topLeft).scale(1 / width);
-    const verti = bottomLeft.sub(topLeft).scale(1 / height);
-    const init = topLeft.sub(this.position);
 
-    const ray = new Ray(this.position, init);
     for (let x = 0; x < width; ++x) {
+      const l = topLeft.scale(x).add(topRight.scale(width - x));
+      const r = bottomLeft.scale(x).add(bottomRight.scale(width - x));
       for (let y = 0; y < height; ++y) {
+        const ray = new Ray(this.position, r.scale(y).add(l.scale(height - y)));
         processor(x, y, ray);
-        ray.direction.add(verti, false);
       }
-      ray.direction.add(topLeft.sub(bottomLeft), false);
-
-      ray.direction.add(horizon, false);
     }
-    return;
   }
 
   private getCorners() {

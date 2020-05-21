@@ -53,11 +53,11 @@ function create2DContext(width: number, height: number) {
 }
 
 const camera = new Camera({
-  position: new Position(-8, -8, -8),
+  position: new Position(-2, -2, -2),
   target: new Position(0, 0, 0),
   viewport: {
-    width: 4 * 1,
-    height: 3 * 1,
+    width: 4,
+    height: 3,
     depth: 5
   }
 });
