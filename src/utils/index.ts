@@ -9,3 +9,18 @@ export function pick(target: { [key: string]: any }, keys: string[]) {
   }
   return copy;
 }
+
+export function recordDuration(label: string, fn: () => void) {
+  return function () {
+    console.time(label);
+    fn();
+    console.timeEnd(label);
+  };
+}
+
+export function assert<T>(
+  target: T | null,
+  message?: string
+): asserts target is T {
+  if (target === null) throw new Error(message);
+}
