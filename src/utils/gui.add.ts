@@ -1,20 +1,20 @@
-import { Position, Direction, Vector } from "./Vector";
-import { Color } from "./Color";
 import { GUI } from "dat.gui";
-import { Camera } from "./Camera";
-import { Material } from "./Material";
-import { Sphere } from "./Shapes";
-import { Light } from "./Lights";
+import { Camera } from "../Camera";
+import { Color } from "../Color";
+import { Light } from "../Lights";
+import { Material } from "../Material";
+import { Sphere } from "../Shapes";
+import { Direction, Position, Vector } from "../Vector";
 
 function addColor(g: GUI, target: Color, name: string, onChange: () => void) {
   return g
     .addColor(
       {
-        [name]: target.toHexString()
+        [name]: target.toHexString(),
       },
       name
     )
-    .onFinishChange(value => {
+    .onFinishChange((value) => {
       const newColor = Color.fromHex(parseInt(value.slice(1), 16));
       target.red = newColor.red;
       target.green = newColor.green;
@@ -36,7 +36,7 @@ function addVector(
   });
   const f = g.addFolder(name);
   for (const name of names) {
-    f.add(dummy, name, -10, 10, 0.5).onFinishChange(value => {
+    f.add(dummy, name, -10, 10, 0.5).onFinishChange((value) => {
       target.values[names.indexOf(name)] = value;
       onChange();
     });
@@ -67,7 +67,7 @@ export function addTree(
   onChange: () => void,
   keys = Object.keys(target)
 ) {
-  keys.forEach(key => {
+  keys.forEach((key) => {
     const value = target[key];
     if (typeof value === "object") {
       if (value instanceof Vector) {

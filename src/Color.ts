@@ -29,9 +29,7 @@ export class Color {
   }
 
   toHexString() {
-    return `#${this.toHex()
-      .toString(16)
-      .padStart(6, "0")}`;
+    return `#${this.toHex().toString(16).padStart(6, "0")}`;
   }
 
   tune(ratio: number, clone = true) {

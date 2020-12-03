@@ -1,12 +1,12 @@
 import { GUI } from "dat.gui";
 import { Camera } from "./Camera";
 import { Color } from "./Color";
-import { addTree } from "./gui.add";
 import { Light } from "./Lights";
 import { Material } from "./Material";
 import { Scene } from "./Scene";
 import { Sphere } from "./Shapes";
 import { pick } from "./utils";
+import { addTree } from "./utils/gui.add";
 import { Position } from "./Vector";
 
 const render = recordDuration(`render a frame`, function render() {
