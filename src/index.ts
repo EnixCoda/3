@@ -1,13 +1,13 @@
-import { Position } from "./Vector";
-import { Camera } from "./Camera";
-import { Sphere } from "./Shapes";
-import { Light } from "./Lights";
-import { Color } from "./Color";
-import { Material } from "./Material";
 import { GUI } from "dat.gui";
-import { Scene } from "./Scene";
+import { Camera } from "./Camera";
+import { Color } from "./Color";
 import { addTree } from "./gui.add";
+import { Light } from "./Lights";
+import { Material } from "./Material";
+import { Scene } from "./Scene";
+import { Sphere } from "./Shapes";
 import { pick } from "./utils";
+import { Position } from "./Vector";
 
 const render = recordDuration(`render a frame`, function render() {
   console.log(`rendering`);
@@ -23,7 +23,7 @@ const render = recordDuration(`render a frame`, function render() {
 });
 
 function recordDuration(label: string, fn: () => void) {
-  return function() {
+  return function () {
     console.time(label);
     fn();
     console.timeEnd(label);
@@ -58,8 +58,8 @@ const camera = new Camera({
   viewport: {
     width: 4,
     height: 3,
-    depth: 5
-  }
+    depth: 5,
+  },
 });
 
 const scene = new Scene(camera);
@@ -97,7 +97,7 @@ const shapes = [
       2,
       Color.fromHex(0xffffff)
     )
-  )
+  ),
 ];
 scene.shapes.push(...shapes);
 
@@ -111,7 +111,7 @@ const lights = [
     Color.fromHex(0xaaaaaa),
     Color.fromHex(0xaaaaaa),
     new Position(1, 1, 1)
-  )
+  ),
 ];
 scene.lights.push(...lights);
 
@@ -129,7 +129,7 @@ addTree(
     "shapes",
     "lights",
     "ambient",
-    "background"
+    "background",
   ]),
   render
 );

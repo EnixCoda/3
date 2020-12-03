@@ -12,7 +12,8 @@
     "dat.gui": "0.7.7"
   },
   "devDependencies": {
-    "parcel-bundler": "^1.6.1"
+    "parcel-bundler": "^1.6.1",
+    "typescript": "^4.0.5"
   },
   "keywords": []
 }
