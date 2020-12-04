@@ -127,12 +127,12 @@ uniform vec2 u_resolution;
 
 out vec4 color;
 
-vec4 strokePixel(out vec4 color, in vec2 coord) {
+vec4 strokePixel(in vec2 coord) {
   return vec4(coord.xy, 1., 1.);
 }
 
 void main(){
-  color = strokePixel(color, fract(gl_FragCoord.xy / u_resolution.xy));
+  color = strokePixel(fract(gl_FragCoord.xy / u_resolution.xy));
 }
 `.trim();
 
