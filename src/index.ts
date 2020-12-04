@@ -98,7 +98,8 @@ function createRender(
   };
 }
 
-const vertexShaderSource = `#version 300 es
+const vertexShaderSource = `
+#version 300 es
 
 // Available types:
 // float,
@@ -115,9 +116,10 @@ in vec4 a_position;
 void main(){
   gl_Position=a_position;
 }
-`;
+`.trim();
 
-const fragmentShaderSource = `#version 300 es
+const fragmentShaderSource = `
+#version 300 es
 
 precision highp float;
 
@@ -132,7 +134,7 @@ vec4 strokePixel(out vec4 color, in vec2 coord) {
 void main(){
   color = strokePixel(color, fract(gl_FragCoord.xy / u_resolution.xy));
 }
-`;
+`.trim();
 
 const dpr = window.devicePixelRatio;
 const scale = 100;
