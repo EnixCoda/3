@@ -4,4 +4,4 @@ This is a toy project with features of visualizing 3D objects and ray tracing ef
 
 ![preview](public/preview.png)
 
-[Code Sandbox Demo](https://cjlqd.csb.app/)
+[demo](https://enixcoda.github.io/3/)
