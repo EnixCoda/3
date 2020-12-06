@@ -24,3 +24,13 @@ export function assert<T>(
 ): asserts target is T {
   if (target === null) throw new Error(message);
 }
+
+export function updateIfNotEqual<T, K extends keyof T>(
+  target: T,
+  property: K,
+  value: T[K]
+) {
+  if (target[property] !== value) {
+    target[property] = value;
+  }
+}

@@ -14,7 +14,7 @@ function addColor(g: GUI, target: Color, name: string, onChange: () => void) {
       },
       name
     )
-    .onFinishChange((value) => {
+    .onChange((value) => {
       const newColor = Color.fromHex(parseInt(value.slice(1), 16));
       target.red = newColor.red;
       target.green = newColor.green;
@@ -36,7 +36,7 @@ function addVector(
   });
   const f = g.addFolder(name);
   for (const name of names) {
-    f.add(dummy, name, -10, 10, 0.5).onFinishChange((value) => {
+    f.add(dummy, name, -10, 10, 0.5).onChange((value) => {
       target.values[names.indexOf(name)] = value;
       onChange();
     });
@@ -57,7 +57,7 @@ function add(g: GUI, target: any, property: string, onChange: () => void) {
     case "vector":
       return addVector(g, target[property], property, onChange);
     case "default":
-      return g.add(target, property).onFinishChange(onChange);
+      return g.add(target, property).onChange(onChange);
   }
 }
 

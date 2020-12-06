@@ -1,8 +1,8 @@
-import { Light } from "./Lights";
-import { Shape } from "./Shapes";
 import { Camera } from "./Camera";
 import { Color } from "./Color";
+import { Light } from "./Lights";
 import { Ray } from "./Ray";
+import { Shape } from "./Shapes";
 import { Direction } from "./Vector";
 
 export class Scene {
@@ -13,7 +13,7 @@ export class Scene {
   background: Color = Color.fromHex(0x000000);
 
   configs = {
-    maxReflectTimes: 2
+    maxReflectTimes: 8,
   };
 
   constructor(camera: Camera) {
@@ -22,10 +22,11 @@ export class Scene {
 
   shade(ray: Ray, depth = 0) {
     const { camera, background, shapes, ambient, lights } = this;
-    if (depth >= this.configs.maxReflectTimes) return background;
+    if (depth >= this.configs.maxReflectTimes) return Color.fromHex(0x000000);
 
     const closest = getClosestIntersect(ray, shapes);
-    if (closest === undefined) return background;
+    if (closest === undefined)
+      return depth === 0 ? background : Color.fromHex(0x000000);
     const { shape, t } = closest;
     const p = ray.reach(t);
 
