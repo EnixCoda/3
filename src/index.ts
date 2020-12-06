@@ -337,33 +337,33 @@ const scene = new Scene(camera);
       new Position(4, 0, 0),
       2,
       new Material(
-        Color.fromHex(0xffffff),
-        Color.fromHex(0x00008f),
-        Color.fromHex(0x00008f),
+        Color.fromHex(0xaaaaaa),
+        Color.fromHex(0x000000),
+        Color.fromHex(0xcccccc),
         2,
-        Color.fromHex(0xffffff)
+        Color.fromHex(0xdddddd)
       )
     ),
     new Sphere(
       new Position(0, 3, 0),
       1,
       new Material(
-        Color.fromHex(0xffffff),
-        Color.fromHex(0x008f00),
-        Color.fromHex(0x008f00),
+        Color.fromHex(0xaaaaaa),
+        Color.fromHex(0x000000),
+        Color.fromHex(0xcccccc),
         2,
-        Color.fromHex(0xffffff)
+        Color.fromHex(0xdddddd)
       )
     ),
     new Sphere(
       new Position(0, 0, 2),
       1,
       new Material(
-        Color.fromHex(0xffffff),
-        Color.fromHex(0x8f0000),
-        Color.fromHex(0x8f0000),
+        Color.fromHex(0xaaaaaa),
+        Color.fromHex(0x000000),
+        Color.fromHex(0xcccccc),
         2,
-        Color.fromHex(0xffffff)
+        Color.fromHex(0xdddddd)
       )
     ),
   ];
@@ -371,17 +371,17 @@ const scene = new Scene(camera);
 
   const lights = [
     new Light(
-      Color.fromHex(0xffffff),
+      Color.fromHex(0xff0000),
       Color.fromHex(0xaaaaaa),
       new Position(0, 0, 0)
     ),
     new Light(
-      Color.fromHex(0xaaaaaa),
+      Color.fromHex(0x00ff00),
       Color.fromHex(0xaaaaaa),
       new Position(-4, 0, -2)
     ),
     new Light(
-      Color.fromHex(0xaaaaaa),
+      Color.fromHex(0x0000ff),
       Color.fromHex(0xaaaaaa),
       new Position(-1.5, 0, 0)
     ),
