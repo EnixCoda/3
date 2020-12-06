@@ -1,3 +1,6 @@
+const amountOfSpheres = 3;
+const amountOfLights = 3;
+
 export const fragmentShaderSource = `#version 300 es
 
 precision highp float;
@@ -87,28 +90,32 @@ uniform int u_max_reflect_times;
 uniform vec4 u_background;
 uniform vec4 u_ambient;
 uniform Camera u_camera;
-uniform Sphere u_spheres[3];
-uniform Light u_lights[3];
+uniform Sphere u_spheres[${amountOfSpheres}];
+uniform Light u_lights[${amountOfLights}];
 
 out vec4 color;
 
-int getClosestSphereIndex(Ray ray) {
+struct Closest {
+  int index;
+  float scale;
+};
+Closest getClosestSphereIndex(Ray ray) {
   float minScale = -1.;
-  int marked = -1;
-  for (int i = 0; i < 3; i++) {
+  int minIndex = -1;
+  for (int i = 0; i < ${amountOfSpheres}; i++) {
     Sphere sphere = u_spheres[i];
     float scale = sphere_intersect(sphere, ray);
     if (scale > 0.) {
-      if (scale < minScale || marked == -1) {
+      if (scale < minScale || minIndex == -1) {
         minScale = scale;
-        marked = i;
+        minIndex = i;
       }
     }
   }
-  return marked;
+  return Closest(minIndex, minScale);
 }
 
-float getSin(vec3 a, vec3 b) {
+float getSine(vec3 a, vec3 b) {
   return length(cross(a, b)) / (length(a) * length(b));
 }
 
@@ -117,63 +124,41 @@ vec4 shade(Ray ray) {
   int depth = 0;
   while (depth < u_max_reflect_times) {
 
-    int closestIndex = getClosestSphereIndex(ray);
-    if (closestIndex == -1) {
-      if (depth == 0) {
-        color += u_background;
-      }
+    Closest closest = getClosestSphereIndex(ray);
+    Sphere sphere = u_spheres[closest.index]; // unsafe access?
 
-      // from the lights directly
-      for (int i = 0; i < 3; i++) {
-        Light light = u_lights[i];
-
-        vec3 toTheLight = light.position - ray.position;
-        float theSin = sqrt(1. - pow(dot(normalize(ray.direction), normalize(toTheLight)), 2.));
-        float d3 = length(toTheLight) * theSin;
-        if (d3 < 0.6) {
-          float s = pow(1. - theSin, pow(2., 7.));
-          color += vec4(s, s, s, 1) * light.specular;
-        }
-      }
-      break;
-    }
-
-    Sphere sphere = u_spheres[closestIndex];
-    float t = sphere_intersect(sphere, ray);
-    if (t < 0.) {
-      color = vec4(1, 1, 1, 1);
-      break;
-    }
-
-    for (int i = 0; i < 3; i++) {
+    for (int i = 0; i < ${amountOfLights}; i++) {
       Light light = u_lights[i];
 
       vec3 toTheLight = light.position - ray.position;
       vec3 toTheSphere = sphere.position - ray.position;
-      float theSin2 = getSin(ray.direction, toTheSphere);
-      float d2 = length(toTheSphere) * theSin2;
-      float theSin3 = getSin(ray.direction, toTheLight);
-      float d3 = length(toTheLight) * theSin3;
-      if (d3 < 2. && d2 > sphere.radius) {
-        float s = pow(1. - theSin3, pow(2., 7.));
-        color += vec4(s, s, s, 1) * light.specular;
+      float d2 = length(toTheSphere) * getSine(ray.direction, toTheSphere);
+      float theSin = getSine(ray.direction, toTheLight);
+      float d3 = length(toTheLight) * theSin;
+      if (d3 < 0.7 && dot(ray.direction, toTheLight) > 0. && (closest.index == -1 || d2 > sphere.radius)) {
+        float s = pow(1. - theSin, pow(2., 7.));
+        color += vec4(s, s, s, 0) * light.specular;
       }
     }
 
-    vec3 p = ray_reach(ray, t);
+    if (closest.index == -1) {
+      color += u_background;
+      break;
+    }
 
     color += u_ambient * sphere.material.ambient;
 
+    vec3 p = ray_reach(ray, closest.scale);
     vec3 n = normalize(p - sphere.position);
 
-    for (int i = 0; i < 3; i++) {
+    for (int i = 0; i < ${amountOfLights}; i++) {
       Light light = u_lights[i];
 
       // shadow
       {
-        int closestIndex2 = getClosestSphereIndex(Ray(light.position, p - light.position));
+        Closest closest2 = getClosestSphereIndex(Ray(light.position, p - light.position));
         // no light or the ray from light is blocked by other shapes?
-        if (closestIndex2 == -1 || closestIndex2 != closestIndex) continue;
+        if (closest2.index == -1 || closest2.index != closest.index) continue;
       }
 
       {
