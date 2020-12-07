@@ -1,12 +1,16 @@
 import { GUI } from "dat.gui";
+import React from "react";
+import ReactDOM from "react-dom";
 import Stats from "stats.js";
 import { Camera } from "./Camera";
 import { Color } from "./Color";
 import { Light } from "./Lights";
 import { Material } from "./Material";
+import { createPlayControl } from "./playControl";
+import { PlayControl } from "./PlayControlUI";
 import { Scene } from "./Scene";
 import { Sphere } from "./Shapes";
-import { assert, pick, updateIfNotEqual } from "./utils";
+import { assert, handleDragEvents, pick, updateIfNotEqual } from "./utils";
 import { addTree } from "./utils/gui.add";
 import { Position } from "./Vector";
 import { fragmentShaderSource, vertexShaderSource } from "./vertexShaderSource";
@@ -129,11 +133,27 @@ function createRender(
       );
     }
 
-    // uniform maxReflectTimes
+    // config uniforms
     {
       gl.uniform1i(
         gl.getUniformLocation(program, `u_max_reflect_times`),
         scene.configs.maxReflectTimes
+      );
+      gl.uniform1f(
+        gl.getUniformLocation(program, `u_castRange`),
+        scene.configs.castRange
+      );
+      gl.uniform1i(
+        gl.getUniformLocation(program, `u_enableDirectLight`),
+        scene.configs.enableDirectLight as any
+      );
+      gl.uniform1i(
+        gl.getUniformLocation(program, `u_enableDiffuse`),
+        scene.configs.enableDiffuse as any
+      );
+      gl.uniform1i(
+        gl.getUniformLocation(program, `u_enableSpecular`),
+        scene.configs.enableSpecular as any
       );
     }
 
@@ -265,17 +285,21 @@ function getCanvasSize(
       };
 }
 
-function inRAF(callback: () => void) {
-  return function () {
-    requestAnimationFrame(callback);
-  };
-}
-
 const gl = createWebGL2Context();
 function createWebGL2Context() {
   const canvas = document.createElement("canvas");
   const gl = canvas.getContext("webgl2");
   if (!gl) throw new Error("WebGL2 context not supported");
+
+  canvas.addEventListener("scroll", (e) => {
+    e.stopPropagation();
+    e.preventDefault();
+  });
+
+  canvas.addEventListener("touchmove", (e) => {
+    e.stopPropagation();
+    e.preventDefault();
+  });
 
   canvas.style.width = "100vw";
   canvas.style.height = "100vh";
@@ -290,44 +314,108 @@ const render = createRender(gl, vertexShaderSource, fragmentShaderSource);
 const stats = new Stats();
 stats.showPanel(0);
 document.body.appendChild(stats.dom);
-
-const autoRender = inRAF(() => {
+const withStats = (fn: () => void) => {
   stats.begin();
-  render();
+  fn();
   stats.end();
+};
 
-  // move camera
-  const { v, h } = onPointerMovementAngle(
-    2,
-    2,
-    gl.canvas.width,
-    gl.canvas.height
-  );
-  camera.rotate(h, v);
-
-  // move lights
-  const periodTime = 1000 * 60 * 100;
-  const angle = ((+Date.now() % periodTime) / periodTime) * 360;
-  const amountOfTracks = Math.min(scene.lights.length, scene.shapes.length);
-  for (let i = 0; i < amountOfTracks; i++) {
-    const $angle = angle * (i + 1) * 2;
-    const light = scene.lights[i];
-    const sphere = scene.shapes[i];
-    // rotate around x, y, z axis according to i
-    if (sphere instanceof Sphere) {
-      const distance = sphere.radius * 1.8;
-      [Math.sin($angle) * distance, Math.cos($angle) * distance, 0].forEach(
-        (v, j) => {
-          const k = (i + j + 2) % 3;
-          light.position.values[k] = sphere.position.values[k] + v;
-        }
-      );
-    }
-  }
-  autoRender();
+const lastRenderedPosition = {
+  x: -1,
+  y: -1,
+};
+const position = {
+  x: -1,
+  y: -1,
+};
+handleDragEvents({
+  onDragStart(x, y) {
+    position.x = x;
+    position.y = y;
+    lastRenderedPosition.x = x;
+    lastRenderedPosition.y = y;
+  },
+  onDragEnd(x, y) {},
+  onDragging(x, y) {
+    position.x = x;
+    position.y = y;
+  },
 });
 
-autoRender();
+const playControl = createPlayControl((playtime) =>
+  withStats(() => {
+    render();
+
+    // move camera
+    const { x, y } = position;
+    if (lastRenderedPosition.x !== x || lastRenderedPosition.y !== y) {
+      const { v, h } = onPointerMovementAngle(
+        x - lastRenderedPosition.x,
+        -y + lastRenderedPosition.y, // coordinate directions are opposite
+        gl.canvas.width,
+        gl.canvas.height
+      );
+      camera.rotate(h, v);
+      lastRenderedPosition.x = x;
+      lastRenderedPosition.y = y;
+    }
+
+    // move lights
+    const periodTime = 1000 * 60 * 100;
+    const angle = ((playtime % periodTime) / periodTime) * 360;
+
+    const aroundCenter = true;
+    if (aroundCenter) {
+      const tracks = [
+        {
+          center: new Position(0, 0, 0),
+          distance: 1,
+          light: scene.lights[0],
+        },
+        {
+          center: new Position(0, 0, 0),
+          distance: 2,
+          light: scene.lights[1],
+        },
+        {
+          center: new Position(0, 0, 0),
+          distance: 1.5,
+          light: scene.lights[2],
+        },
+      ];
+      for (let i = 0; i < tracks.length; i++) {
+        const { center, distance, light } = tracks[i];
+        const $angle = angle * (i + 1) * 2;
+        // rotate around x, y, z axis according to i
+        [Math.sin($angle) * distance, Math.cos($angle) * distance, 0].forEach(
+          (v, j) => {
+            const k = (i + j) % 3;
+            light.position.values[k] = center.values[k] + v;
+          }
+        );
+      }
+    } else {
+      const amountOfTracks = Math.min(scene.lights.length, scene.shapes.length);
+      for (let i = 0; i < amountOfTracks; i++) {
+        const $angle = angle * (i + 1) * 2;
+        const light = scene.lights[i];
+        const sphere = scene.shapes[i];
+        // rotate around x, y, z axis according to i
+        if (sphere instanceof Sphere) {
+          const distance = sphere.radius * 1.8;
+          [Math.sin($angle) * distance, Math.cos($angle) * distance, 0].forEach(
+            (v, j) => {
+              const k = (i + j + 2) % 3;
+              light.position.values[k] = sphere.position.values[k] + v;
+            }
+          );
+        }
+      }
+    }
+  })
+);
+
+playControl.play();
 
 const camera = new Camera({
   distance: 8,
@@ -344,7 +432,7 @@ const scene = new Scene(camera);
 {
   const shapes = [
     new Sphere(
-      new Position(4, 0, 0),
+      new Position(4, 4, 0),
       2,
       new Material(
         Color.fromHex(0xaaaaaa),
@@ -355,7 +443,7 @@ const scene = new Scene(camera);
       )
     ),
     new Sphere(
-      new Position(0, 3, 0),
+      new Position(0, 3, 3),
       1,
       new Material(
         Color.fromHex(0xaaaaaa),
@@ -366,7 +454,7 @@ const scene = new Scene(camera);
       )
     ),
     new Sphere(
-      new Position(0, 0, 2),
+      new Position(2, 0, 2),
       1,
       new Material(
         Color.fromHex(0xaaaaaa),
@@ -398,7 +486,7 @@ const scene = new Scene(camera);
   ];
   scene.lights.push(...lights);
 
-  const ambient = Color.fromHex(0x111111);
+  const ambient = Color.fromHex(0x000000);
   scene.ambient = ambient;
   const background = Color.fromHex(0x222222);
   scene.background = background;
@@ -427,9 +515,14 @@ function onPointerMovementAngle(
 ) {
   const short = Math.min(width, height);
   const angles = {
-    h: (x / short) * Math.PI,
-    v: (y / short) * Math.PI,
+    h: (x / short) * Math.PI * 2,
+    v: (y / short) * Math.PI * 2,
   };
 
   return angles;
 }
+
+ReactDOM.render(
+  React.createElement(PlayControl, { playControl }),
+  document.querySelector("#controls")
+);

@@ -1,4 +1,4 @@
-const amountOfSpheres = 3;
+const amountOfSpheres = 1;
 const amountOfLights = 3;
 
 export const fragmentShaderSource = `#version 300 es
@@ -87,16 +87,16 @@ float sphere_intersect(Sphere sphere, Ray ray) {
 uniform vec2 u_resolution;
 uniform int u_max_reflect_times;
 
+uniform float u_castRange;
+uniform bool u_enableDirectLight;
+uniform bool u_enableDiffuse;
+uniform bool u_enableSpecular;
+
 uniform vec4 u_background;
 uniform vec4 u_ambient;
 uniform Camera u_camera;
 uniform Sphere u_spheres[${amountOfSpheres}];
 uniform Light u_lights[${amountOfLights}];
-
-// TODO: uniform-ize
-float u_castRange = 0.7;
-bool enableDiffuse = true;
-bool enableSpecular = true;
 
 out vec4 color;
 
@@ -133,25 +133,32 @@ vec4 shade(Ray ray) {
     Sphere sphere = u_spheres[closest.index]; // unsafe access?
     vec3 p = ray_reach(ray, closest.scale);
 
-    for (int i = 0; i < ${amountOfLights}; i++) {
-      Light light = u_lights[i];
+    if (u_enableDirectLight) {
+      for (int i = 0; i < ${amountOfLights}; i++) {
+        Light light = u_lights[i];
 
-      vec3 toTheLight = light.position - ray.position;
-      float theSine = getSine(ray.direction, toTheLight);
-      float theCosine = dot(normalize(ray.direction), normalize(toTheLight));
-      float distanceToTheLight = length(toTheLight) * theSine;
-      if (distanceToTheLight > u_castRange || theCosine <= 0.) {
-        continue;
-      }
-
-      if (closest.index != -1) {
-        if (length(ray.position - p) < length(toTheLight) * theCosine) {
+        vec3 toTheLight = light.position - ray.position;
+        float theSine = getSine(ray.direction, toTheLight);
+        float theCosine = dot(normalize(ray.direction), normalize(toTheLight));
+        float distanceToTheLight = length(toTheLight) * theSine;
+        if (distanceToTheLight > u_castRange || theCosine <= 0.) {
           continue;
         }
-      }
 
-      vec4 lightColor = pow(1. - theSine, pow(2., 7.)) * light.specular;
-      rayColor += lightColor;
+        if (closest.index != -1) {
+          // blocked by another sphere
+          if (length(ray.position - p) < length(toTheLight) * theCosine) {
+            // glow
+            float c = dot(normalize(sphere.position - p), ray.direction);
+            if (c * sphere.radius < u_castRange) rayColor += light.specular * pow(1. - c, pow(2., 6.));
+
+            continue;
+          }
+        }
+
+        vec4 lightColor = pow(1. - theSine, pow(2., 7.)) * light.specular;
+        rayColor += lightColor;
+    }
     }
 
     if (closest.index == -1) {
@@ -159,9 +166,9 @@ vec4 shade(Ray ray) {
       color += rayColor;
       break;
     } else {
-      rayColor += u_ambient * sphere.material.ambient;
-
       vec3 n = normalize(p - sphere.position);
+
+      rayColor += u_ambient * sphere.material.ambient * dot(normalize(ray.direction), -n);
 
       for (int i = 0; i < ${amountOfLights}; i++) {
         Light light = u_lights[i];
@@ -181,12 +188,12 @@ vec4 shade(Ray ray) {
             continue;
           }
 
-          if (enableDiffuse) {
+          if (u_enableDiffuse) {
             vec4 diffuse = sphere.material.diffuse * light.specular * nl;
             rayColor += diffuse;
           }
 
-          if (enableSpecular) {
+          if (u_enableSpecular) {
             vec3 r = n * 2. * nl - l;
             vec3 v = normalize(u_camera.position - p);
             float vr = dot(v, r);

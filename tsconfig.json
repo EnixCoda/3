@@ -5,11 +5,8 @@
     "module": "ESNext",
     "esModuleInterop": true,
     "sourceMap": true,
-    "lib": [
-      "es6",
-      "dom",
-      "ES2017.String"
-    ],
+    "jsx": "react",
+    "lib": ["es6", "dom", "ES2017.String"],
     "rootDir": "src",
     "moduleResolution": "node"
   }

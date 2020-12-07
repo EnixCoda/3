@@ -9,8 +9,12 @@
   },
   "dependencies": {
     "@types/dat.gui": "0.7.5",
+    "@types/react": "^17.0.0",
+    "@types/react-dom": "^17.0.0",
     "@types/stats.js": "^0.17.0",
     "dat.gui": "0.7.7",
+    "react": "17.0.1",
+    "react-dom": "^17.0.1",
     "stats.js": "^0.17.0"
   },
   "devDependencies": {

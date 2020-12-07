@@ -38,3 +38,28 @@ export function updateIfNotEqual<T, K extends keyof T>(
 export function run<T>(fn: () => T): T {
   return fn();
 }
+
+export function handleDragEvents({
+  onDragStart,
+  onDragEnd,
+  onDragging,
+}: {
+  onDragStart: (x: number, y: number) => void;
+  onDragEnd: (x: number, y: number) => void;
+  onDragging: (x: number, y: number) => void;
+}) {
+  let dragging = false;
+  window.addEventListener("pointerdown", (e) => {
+    dragging = true;
+    onDragStart(e.x, e.y);
+  });
+
+  window.addEventListener("pointerup", (e) => {
+    dragging = false;
+    onDragEnd(e.x, e.y);
+  });
+
+  window.addEventListener("pointermove", (e) => {
+    if (dragging) onDragging(e.x, e.y);
+  });
+}
