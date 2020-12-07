@@ -93,6 +93,11 @@ uniform Camera u_camera;
 uniform Sphere u_spheres[${amountOfSpheres}];
 uniform Light u_lights[${amountOfLights}];
 
+// TODO: uniform-ize
+float u_castRange = 0.7;
+bool enableDiffuse = true;
+bool enableSpecular = true;
+
 out vec4 color;
 
 struct Closest {
@@ -123,81 +128,87 @@ vec4 shade(Ray ray) {
   vec4 color = vec4(0, 0, 0, 1);
   int depth = 0;
   while (depth < u_max_reflect_times) {
-
+    vec4 rayColor = vec4(0, 0, 0, 1);
     Closest closest = getClosestSphereIndex(ray);
     Sphere sphere = u_spheres[closest.index]; // unsafe access?
+    vec3 p = ray_reach(ray, closest.scale);
 
     for (int i = 0; i < ${amountOfLights}; i++) {
       Light light = u_lights[i];
 
       vec3 toTheLight = light.position - ray.position;
-      vec3 toTheSphere = sphere.position - ray.position;
-      float d2 = length(toTheSphere) * getSine(ray.direction, toTheSphere);
-      float theSin = getSine(ray.direction, toTheLight);
-      float d3 = length(toTheLight) * theSin;
-      if (d3 < 0.7 && dot(ray.direction, toTheLight) > 0. && (closest.index == -1 || d2 > sphere.radius)) {
-        float s = pow(1. - theSin, pow(2., 7.));
-        color += vec4(s, s, s, 0) * light.specular;
+      float theSine = getSine(ray.direction, toTheLight);
+      float theCosine = dot(normalize(ray.direction), normalize(toTheLight));
+      float distanceToTheLight = length(toTheLight) * theSine;
+      if (distanceToTheLight > u_castRange || theCosine <= 0.) {
+        continue;
       }
+
+      if (closest.index != -1) {
+        if (length(ray.position - p) < length(toTheLight) * theCosine) {
+          continue;
+        }
+      }
+
+      vec4 lightColor = pow(1. - theSine, pow(2., 7.)) * light.specular;
+      rayColor += lightColor;
     }
 
     if (closest.index == -1) {
-      color += u_background;
+      rayColor += u_background;
+      color += rayColor;
       break;
-    }
+    } else {
+      rayColor += u_ambient * sphere.material.ambient;
 
-    color += u_ambient * sphere.material.ambient;
+      vec3 n = normalize(p - sphere.position);
 
-    vec3 p = ray_reach(ray, closest.scale);
-    vec3 n = normalize(p - sphere.position);
+      for (int i = 0; i < ${amountOfLights}; i++) {
+        Light light = u_lights[i];
 
-    for (int i = 0; i < ${amountOfLights}; i++) {
-      Light light = u_lights[i];
-
-      // shadow
-      {
-        Closest closest2 = getClosestSphereIndex(Ray(light.position, p - light.position));
-        // no light or the ray from light is blocked by other shapes?
-        if (closest2.index == -1 || closest2.index != closest.index) continue;
-      }
-
-      {
-        vec3 l = normalize(light.position - p);
-        float nl = dot(n, l);
-        if (nl <= 0.) {
-          // light is incoming from back
-          continue;
+        // shadow
+        {
+          Closest closest2 = getClosestSphereIndex(Ray(light.position, p - light.position));
+          // no light or the ray from light is blocked by other shapes?
+          if (closest2.index == -1 || closest2.index != closest.index) continue;
         }
 
-        // diffuse
         {
-          vec4 diffuse = sphere.material.diffuse * light.specular * nl;
-          color += diffuse;
-        }
+          vec3 l = normalize(light.position - p);
+          float nl = dot(n, l);
+          if (nl <= 0.) {
+            // light is incoming from back
+            continue;
+          }
 
-        // specular
-        {
-          vec3 r = n * 2. * nl - l;
-          vec3 v = normalize(u_camera.position - p);
-          float vr = dot(v, r);
-          if (vr > 0.) {
-            vec4 specular = light.specular
-              * sphere.material.specular
-              * pow(vr, sphere.material.shininess);
-            color += specular;
+          if (enableDiffuse) {
+            vec4 diffuse = sphere.material.diffuse * light.specular * nl;
+            rayColor += diffuse;
+          }
+
+          if (enableSpecular) {
+            vec3 r = n * 2. * nl - l;
+            vec3 v = normalize(u_camera.position - p);
+            float vr = dot(v, r);
+            if (vr > 0.) {
+              vec4 specular = light.specular
+                * sphere.material.specular
+                * pow(vr, sphere.material.shininess);
+              rayColor += specular;
+            }
           }
         }
       }
-    }
 
-    // reflect
-    {
-      vec3 l = normalize(-ray.direction);
-      vec3 r = n * 2. * dot(n, l) - l;
-      ray = Ray(p, r);
+      // reflect
+      {
+        vec3 l = normalize(-ray.direction);
+        vec3 r = n * 2. * dot(n, l) - l;
+        ray = Ray(p, r);
+        depth++;
+      }
+      color += rayColor * sphere.material.reflectivity;
     }
-
-    depth++;
   }
   return color;
 }
