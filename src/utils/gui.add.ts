@@ -77,13 +77,13 @@ export function addTree(
       } else {
         const keys =
           value instanceof Camera
-            ? ["viewport", "position", "direction"]
+            ? ["distance"]
             : value instanceof Material
             ? ["ambient", "diffuse", "specular", "reflectivity", "shininess"]
             : value instanceof Sphere
             ? ["material", "position", "radius"]
             : value instanceof Light
-            ? ["specular", "diffuse", "position"]
+            ? ["specular", "diffuse"]
             : Object.keys(value);
         addTree(g.addFolder(key), value, onChange, keys);
       }

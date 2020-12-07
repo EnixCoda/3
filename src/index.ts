@@ -296,6 +296,15 @@ const autoRender = inRAF(() => {
   render();
   stats.end();
 
+  // move camera
+  const { v, h } = onPointerMovementAngle(
+    2,
+    2,
+    gl.canvas.width,
+    gl.canvas.height
+  );
+  camera.rotate(h, v);
+
   // move lights
   const periodTime = 1000 * 60 * 100;
   const angle = ((+Date.now() % periodTime) / periodTime) * 360;
@@ -321,6 +330,7 @@ const autoRender = inRAF(() => {
 autoRender();
 
 const camera = new Camera({
+  distance: 8,
   position: new Position(-5, -5, -5),
   target: new Position(0, 0, 0),
   viewport: {
@@ -407,4 +417,19 @@ const scene = new Scene(camera);
     render
   );
   render();
+}
+
+function onPointerMovementAngle(
+  x: number,
+  y: number,
+  width: number,
+  height: number
+) {
+  const short = Math.min(width, height);
+  const angles = {
+    h: (x / short) * Math.PI,
+    v: (y / short) * Math.PI,
+  };
+
+  return angles;
 }

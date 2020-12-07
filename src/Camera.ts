@@ -1,5 +1,5 @@
-import { Position, Direction } from "./Vector";
 import { Ray } from "./Ray";
+import { Direction, Position } from "./Vector";
 
 type Viewport = {
   width: number;
@@ -8,16 +8,19 @@ type Viewport = {
 };
 
 export class Camera {
+  distance: number;
   position: Position;
   direction: Direction;
   viewport: Viewport;
 
   constructor({
+    distance,
     position,
     direction,
     target,
-    viewport
+    viewport,
   }: {
+    distance: Camera["distance"];
     position: Camera["position"];
     viewport: Viewport;
   } & (
@@ -28,7 +31,9 @@ export class Camera {
     | {
         direction?: undefined;
         target: Position;
-      })) {
+      }
+  )) {
+    this.distance = distance;
     this.position = position;
     this.viewport = viewport;
     if (direction) this.direction = direction;
@@ -44,6 +49,21 @@ export class Camera {
   targetAt(target: Position) {
     this.direction = target.sub(this.position);
     return this.direction;
+  }
+
+  // rotate around the Z axis, vertically and horizontally to current viewport
+  rotate(h: number, v: number) {
+    const angleV = Math.asin(this.position.z / this.position.length);
+    const angleH =
+      Math.atan(this.position.y / this.position.x) +
+      Math.PI * (this.position.x >= 0 ? 2 : 1);
+
+    this.position.values = [
+      Math.cos(angleH + h) * this.distance,
+      Math.sin(angleH + h) * this.distance,
+      Math.sin(angleV + v) * this.distance,
+    ];
+    this.targetAt(new Position(0, 0, 0));
   }
 
   rasterize(

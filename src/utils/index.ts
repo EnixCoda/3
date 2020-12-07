@@ -34,3 +34,7 @@ export function updateIfNotEqual<T, K extends keyof T>(
     target[property] = value;
   }
 }
+
+export function run<T>(fn: () => T): T {
+  return fn();
+}

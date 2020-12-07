@@ -5,6 +5,18 @@ export class Vector<V = any> {
     return Math.sqrt(this.dotProduct(this));
   }
 
+  get x() {
+    return this.values[0];
+  }
+
+  get y() {
+    return this.values[1];
+  }
+
+  get z() {
+    return this.values[2];
+  }
+
   constructor(values?: Vector["values"]) {
     if (values) for (const value of values) this.values.push(value);
   }
