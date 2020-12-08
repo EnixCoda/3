@@ -1,7 +1,7 @@
-const amountOfSpheres = 1;
-const amountOfLights = 3;
+#version 300 es
 
-export const fragmentShaderSource = `#version 300 es
+const int amountOfSpheres = 3;
+const int amountOfLights = 3;
 
 precision highp float;
 
@@ -76,7 +76,8 @@ float sphere_intersect(Sphere sphere, Ray ray) {
       return -b / 2. / a;
     } else if (inDelta > 0.) {
       float delta = sqrt(inDelta); // greater than 0
-      if (a > 0.) return (-b - delta) / 2. / a;
+      if (a > 0.)
+        return (-b - delta) / 2. / a;
       return (-b + delta) / 2. / a;
     }
   }
@@ -95,8 +96,8 @@ uniform bool u_enableSpecular;
 uniform vec4 u_background;
 uniform vec4 u_ambient;
 uniform Camera u_camera;
-uniform Sphere u_spheres[${amountOfSpheres}];
-uniform Light u_lights[${amountOfLights}];
+uniform Sphere u_spheres[amountOfSpheres];
+uniform Light u_lights[amountOfLights];
 
 out vec4 color;
 
@@ -107,7 +108,7 @@ struct Closest {
 Closest getClosestSphereIndex(Ray ray) {
   float minScale = -1.;
   int minIndex = -1;
-  for (int i = 0; i < ${amountOfSpheres}; i++) {
+  for (int i = 0; i < amountOfSpheres; i++) {
     Sphere sphere = u_spheres[i];
     float scale = sphere_intersect(sphere, ray);
     if (scale > 0.) {
@@ -134,7 +135,7 @@ vec4 shade(Ray ray) {
     vec3 p = ray_reach(ray, closest.scale);
 
     if (u_enableDirectLight) {
-      for (int i = 0; i < ${amountOfLights}; i++) {
+      for (int i = 0; i < amountOfLights; i++) {
         Light light = u_lights[i];
 
         vec3 toTheLight = light.position - ray.position;
@@ -150,15 +151,18 @@ vec4 shade(Ray ray) {
           if (length(ray.position - p) < length(toTheLight) * theCosine) {
             // glow
             float c = dot(normalize(sphere.position - p), ray.direction);
-            if (c * sphere.radius < u_castRange) rayColor += light.specular * pow(1. - c, pow(2., 6.));
+            if (c * sphere.radius < u_castRange * 2.)
+              rayColor += light.specular * pow(1. - c, pow(2., 5.));
 
             continue;
           }
         }
 
-        vec4 lightColor = pow(1. - theSine, pow(2., 7.)) * light.specular;
+        vec4 lightColor =
+            pow(1. - distanceToTheLight / u_castRange, pow(2., 4.)) *
+            light.specular;
         rayColor += lightColor;
-    }
+      }
     }
 
     if (closest.index == -1) {
@@ -168,16 +172,19 @@ vec4 shade(Ray ray) {
     } else {
       vec3 n = normalize(p - sphere.position);
 
-      rayColor += u_ambient * sphere.material.ambient * dot(normalize(ray.direction), -n);
+      rayColor += u_ambient * sphere.material.ambient *
+                  dot(normalize(ray.direction), -n);
 
-      for (int i = 0; i < ${amountOfLights}; i++) {
+      for (int i = 0; i < amountOfLights; i++) {
         Light light = u_lights[i];
 
         // shadow
         {
-          Closest closest2 = getClosestSphereIndex(Ray(light.position, p - light.position));
+          Closest closest2 =
+              getClosestSphereIndex(Ray(light.position, p - light.position));
           // no light or the ray from light is blocked by other shapes?
-          if (closest2.index == -1 || closest2.index != closest.index) continue;
+          if (closest2.index == -1 || closest2.index != closest.index)
+            continue;
         }
 
         {
@@ -198,9 +205,8 @@ vec4 shade(Ray ray) {
             vec3 v = normalize(u_camera.position - p);
             float vr = dot(v, r);
             if (vr > 0.) {
-              vec4 specular = light.specular
-                * sphere.material.specular
-                * pow(vr, sphere.material.shininess);
+              vec4 specular = light.specular * sphere.material.specular *
+                              pow(vr, sphere.material.shininess);
               rayColor += specular;
             }
           }
@@ -227,11 +233,13 @@ Ray getRay(vec2 vp) {
 
   vec3 d = u_camera.direction;
   vec3 horizontal = d.y != 0. || d.x != 0.
-    ? normalize(vec3(-d.y, d.x, 0)) * width
-    : vec3(width, 0, 0);
-  vec3 vertical = d.y != 0. || d.x != 0.
-    ? normalize(vec3(d.x * d.z, d.y * d.z, -(d.x * d.x + d.y * d.y))) * height
-    : vec3(0, height, 0);
+                        ? normalize(vec3(-d.y, d.x, 0)) * width
+                        : vec3(width, 0, 0);
+  vec3 vertical =
+      d.y != 0. || d.x != 0.
+          ? normalize(vec3(d.x * d.z, d.y * d.z, -(d.x * d.x + d.y * d.y))) *
+                height
+          : vec3(0, height, 0);
 
   vec3 baseDirection = normalize(d) * depth;
 
@@ -247,21 +255,6 @@ Ray getRay(vec2 vp) {
 }
 
 // shader toy style :)
-vec4 strokePixel(vec2 coord) {
-  return shade(getRay(coord));
-}
+vec4 strokePixel(vec2 coord) { return shade(getRay(coord)); }
 
-void main() {
-  color = strokePixel(gl_FragCoord.xy / u_resolution.xy);
-}
-
-`.trim();
-
-export const vertexShaderSource = `#version 300 es
-
-in vec4 a_position;
-
-void main() {
-  gl_Position = a_position;
-}
-`.trim();
+void main() { color = strokePixel(gl_FragCoord.xy / u_resolution.xy); }

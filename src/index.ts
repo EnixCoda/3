@@ -9,11 +9,12 @@ import { Material } from "./Material";
 import { createPlayControl } from "./playControl";
 import { PlayControl } from "./PlayControlUI";
 import { Scene } from "./Scene";
+import fragmentShaderSource from "./shaders/fragment.glsl";
+import vertexShaderSource from "./shaders/vertex.glsl";
 import { Sphere } from "./Shapes";
 import { assert, handlePointerEvents, pick, updateIfNotEqual } from "./utils";
 import { addTree } from "./utils/gui.add";
 import { Position } from "./Vector";
-import { fragmentShaderSource, vertexShaderSource } from "./vertexShaderSource";
 
 function createShader(
   gl: WebGL2RenderingContext,
