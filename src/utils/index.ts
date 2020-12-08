@@ -39,7 +39,18 @@ export function run<T>(fn: () => T): T {
   return fn();
 }
 
-export function handleDragEvents(
+function mapReader<K, V>(map: Map<K, V>, getDefaultValue: () => V) {
+  return (key: K) => {
+    if (!map.has(key)) {
+      map.set(key, getDefaultValue());
+    }
+    const value = map.get(key);
+    if (value === undefined) throw new Error();
+    return value;
+  };
+}
+
+export function handlePointerEvents(
   target: HTMLElement | Window | Document,
   {
     onDragStart,
@@ -51,21 +62,59 @@ export function handleDragEvents(
     onDragging: (x: number, y: number) => void;
   }
 ) {
-  let dragging = false;
+  const map = new Map<
+    PointerEvent["pointerId"],
+    { dragging: boolean; position: Pick<PointerEvent, "x" | "y"> }
+  >();
+
+  function getDragging() {
+    return Array.from(map.values()).filter(({ dragging }) => dragging);
+  }
+
+  const read = mapReader(map, () => ({
+    dragging: false,
+    position: {
+      x: 0,
+      y: 0,
+    },
+  }));
+
+  function extractData(ev: Event) {
+    const { pointerId, x, y } = ev as PointerEvent;
+    const state = read(pointerId);
+    return { state, x, y };
+  }
+
   target.addEventListener("pointerdown", (ev) => {
-    const e = ev as PointerEvent;
-    dragging = true;
-    onDragStart(e.x, e.y);
+    const { x, y, state } = extractData(ev);
+    state.dragging = true;
+    state.position.x = x;
+    state.position.y = y;
+    switch (getDragging().length) {
+      case 1:
+        onDragStart(x, y);
+        break;
+    }
   });
 
   target.addEventListener("pointerup", (ev) => {
-    const e = ev as PointerEvent;
-    dragging = false;
-    onDragEnd(e.x, e.y);
+    const { x, y, state } = extractData(ev);
+    state.dragging = false;
+    switch (getDragging().length) {
+      case 0:
+        onDragEnd(x, y);
+        break;
+    }
   });
 
   target.addEventListener("pointermove", (ev) => {
-    const e = ev as PointerEvent;
-    if (dragging) onDragging(e.x, e.y);
+    const { x, y, state } = extractData(ev);
+    state.position.x = x;
+    state.position.y = y;
+    switch (getDragging().length) {
+      case 1:
+        if (state.dragging) onDragging(x, y);
+        break;
+    }
   });
 }

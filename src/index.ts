@@ -10,7 +10,7 @@ import { createPlayControl } from "./playControl";
 import { PlayControl } from "./PlayControlUI";
 import { Scene } from "./Scene";
 import { Sphere } from "./Shapes";
-import { assert, handleDragEvents, pick, updateIfNotEqual } from "./utils";
+import { assert, handlePointerEvents, pick, updateIfNotEqual } from "./utils";
 import { addTree } from "./utils/gui.add";
 import { Position } from "./Vector";
 import { fragmentShaderSource, vertexShaderSource } from "./vertexShaderSource";
@@ -291,16 +291,6 @@ function createWebGL2Context() {
   const gl = canvas.getContext("webgl2");
   if (!gl) throw new Error("WebGL2 context not supported");
 
-  canvas.addEventListener("scroll", (e) => {
-    e.stopPropagation();
-    e.preventDefault();
-  });
-
-  canvas.addEventListener("touchmove", (e) => {
-    e.stopPropagation();
-    e.preventDefault();
-  });
-
   canvas.style.width = "100vw";
   canvas.style.height = "100vh";
   document.body.append(canvas);
@@ -330,10 +320,20 @@ const position = {
 };
 if (gl.canvas instanceof HTMLElement) {
   gl.canvas.addEventListener("wheel", (e) => {
-    scene.camera.zoom(e.deltaY * 0.01 * 0.0625);
+    scene.camera.zoom(e.deltaY * 0.05 * 0.0625);
   });
 
-  handleDragEvents(gl.canvas, {
+  gl.canvas.addEventListener("scroll", (e) => {
+    e.stopPropagation();
+    e.preventDefault();
+  });
+
+  gl.canvas.addEventListener("touchmove", (e) => {
+    e.stopPropagation();
+    e.preventDefault();
+  });
+
+  handlePointerEvents(gl.canvas, {
     onDragStart(x, y) {
       position.x = x;
       position.y = y;
