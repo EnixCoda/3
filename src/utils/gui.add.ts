@@ -1,5 +1,4 @@
 import { GUI } from "dat.gui";
-import { Camera } from "../Camera";
 import { Color } from "../Color";
 import { Light } from "../Lights";
 import { Material } from "../Material";
@@ -76,9 +75,7 @@ export function addTree(
         addColor(g, value, key, onChange);
       } else {
         const keys =
-          value instanceof Camera
-            ? ["distance"]
-            : value instanceof Material
+          value instanceof Material
             ? ["ambient", "diffuse", "specular", "reflectivity", "shininess"]
             : value instanceof Sphere
             ? ["material", "position", "radius"]

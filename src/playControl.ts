@@ -45,7 +45,9 @@ export function createPlayControl(fn: (playtime: number) => void) {
   }
 
   function tunePlaySpeed(faster: boolean) {
-    if (playSpeed < 32) playSpeed *= faster ? 2 : 0.5;
+    if (faster) {
+      if (playSpeed < 32) playSpeed *= 2;
+    } else playSpeed *= 0.5;
   }
 
   function back() {

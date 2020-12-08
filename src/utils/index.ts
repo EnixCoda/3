@@ -39,27 +39,33 @@ export function run<T>(fn: () => T): T {
   return fn();
 }
 
-export function handleDragEvents({
-  onDragStart,
-  onDragEnd,
-  onDragging,
-}: {
-  onDragStart: (x: number, y: number) => void;
-  onDragEnd: (x: number, y: number) => void;
-  onDragging: (x: number, y: number) => void;
-}) {
+export function handleDragEvents(
+  target: HTMLElement | Window | Document,
+  {
+    onDragStart,
+    onDragEnd,
+    onDragging,
+  }: {
+    onDragStart: (x: number, y: number) => void;
+    onDragEnd: (x: number, y: number) => void;
+    onDragging: (x: number, y: number) => void;
+  }
+) {
   let dragging = false;
-  window.addEventListener("pointerdown", (e) => {
+  target.addEventListener("pointerdown", (ev) => {
+    const e = ev as PointerEvent;
     dragging = true;
     onDragStart(e.x, e.y);
   });
 
-  window.addEventListener("pointerup", (e) => {
+  target.addEventListener("pointerup", (ev) => {
+    const e = ev as PointerEvent;
     dragging = false;
     onDragEnd(e.x, e.y);
   });
 
-  window.addEventListener("pointermove", (e) => {
+  target.addEventListener("pointermove", (ev) => {
+    const e = ev as PointerEvent;
     if (dragging) onDragging(e.x, e.y);
   });
 }

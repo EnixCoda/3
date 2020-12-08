@@ -328,19 +328,25 @@ const position = {
   x: -1,
   y: -1,
 };
-handleDragEvents({
-  onDragStart(x, y) {
-    position.x = x;
-    position.y = y;
-    lastRenderedPosition.x = x;
-    lastRenderedPosition.y = y;
-  },
-  onDragEnd(x, y) {},
-  onDragging(x, y) {
-    position.x = x;
-    position.y = y;
-  },
-});
+if (gl.canvas instanceof HTMLElement) {
+  gl.canvas.addEventListener("wheel", (e) => {
+    scene.camera.zoom(e.deltaY * 0.01 * 0.0625);
+  });
+
+  handleDragEvents(gl.canvas, {
+    onDragStart(x, y) {
+      position.x = x;
+      position.y = y;
+      lastRenderedPosition.x = x;
+      lastRenderedPosition.y = y;
+    },
+    onDragEnd(x, y) {},
+    onDragging(x, y) {
+      position.x = x;
+      position.y = y;
+    },
+  });
+}
 
 const playControl = createPlayControl((playtime) =>
   withStats(() => {
@@ -350,12 +356,12 @@ const playControl = createPlayControl((playtime) =>
     const { x, y } = position;
     if (lastRenderedPosition.x !== x || lastRenderedPosition.y !== y) {
       const { v, h } = onPointerMovementAngle(
-        x - lastRenderedPosition.x,
-        -y + lastRenderedPosition.y, // coordinate directions are opposite
+        -x + lastRenderedPosition.x,
+        y - lastRenderedPosition.y, // coordinate directions are opposite
         gl.canvas.width,
         gl.canvas.height
       );
-      camera.rotate(h, v);
+      scene.camera.rotate(h, v);
       lastRenderedPosition.x = x;
       lastRenderedPosition.y = y;
     }
@@ -418,13 +424,12 @@ const playControl = createPlayControl((playtime) =>
 playControl.play();
 
 const camera = new Camera({
-  distance: 8,
-  position: new Position(-5, -5, -5),
+  position: new Position(-1, -1, 0),
   target: new Position(0, 0, 0),
   viewport: {
-    width: 4,
-    height: 3,
-    depth: 5,
+    width: 1,
+    height: 1,
+    depth: 1,
   },
 });
 
@@ -469,17 +474,17 @@ const scene = new Scene(camera);
 
   const lights = [
     new Light(
-      Color.fromHex(0xff0000),
+      Color.fromHex(0xcc0000),
       Color.fromHex(0xaaaaaa),
       new Position(0, 0, 0)
     ),
     new Light(
-      Color.fromHex(0x00ff00),
+      Color.fromHex(0x00f0f0),
       Color.fromHex(0xaaaaaa),
       new Position(-4, 0, -2)
     ),
     new Light(
-      Color.fromHex(0x0000ff),
+      Color.fromHex(0xffcc00),
       Color.fromHex(0xaaaaaa),
       new Position(-1.5, 0, 0)
     ),
@@ -494,17 +499,9 @@ const scene = new Scene(camera);
   const g = new GUI();
   addTree(
     g,
-    pick(scene, [
-      "configs",
-      "camera",
-      "shapes",
-      "lights",
-      "ambient",
-      "background",
-    ]),
+    pick(scene, ["configs", "shapes", "lights", "ambient", "background"]),
     render
   );
-  render();
 }
 
 function onPointerMovementAngle(

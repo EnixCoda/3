@@ -27,18 +27,30 @@ function useRAFState<T>(cb: () => T) {
 
 const startTime = +Date.now();
 export function PlayControl({ playControl }: React.PropsWithChildren<Props>) {
-  const playSpeed = useRAFState(() => playControl.getPlaySpeed().toString());
   const playtime = useRAFState(() =>
     new Date(playControl.getPlaytime() + startTime).toLocaleTimeString()
   );
   return (
-    <div style={{ display: "inline-flex", background: "#333", color: "#ddd" }}>
-      <button onClick={() => playControl.back()}>⏪</button>
-      <button onClick={() => playControl.toggle()}>⏯</button>
-      <button onClick={() => playControl.forward()}>⏩</button>
-      <span>✕{playSpeed}</span>
-      <span>{" - "}</span>
-      <span>{playtime}</span>
+    <div
+      style={{
+        display: "inline-flex",
+        flexDirection: "column",
+        alignItems: "center",
+        background: "#333",
+        color: "#ddd",
+        width: 150,
+        padding: "8px 12px",
+        borderRadius: 4,
+      }}
+    >
+      <div style={{ display: "inline-flex", justifyContent: "space-between" }}>
+        <span>{playtime}</span>
+      </div>
+      <div style={{ display: "inline-flex", justifyContent: "space-between" }}>
+        <button onClick={() => playControl.back()}>⏪</button>
+        <button onClick={() => playControl.toggle()}>⏯</button>
+        <button onClick={() => playControl.forward()}>⏩</button>
+      </div>
     </div>
   );
 }

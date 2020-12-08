@@ -8,19 +8,19 @@ type Viewport = {
 };
 
 export class Camera {
-  distance: number;
   position: Position;
   direction: Direction;
   viewport: Viewport;
+  get distance(): number {
+    return this.position.length;
+  }
 
   constructor({
-    distance,
     position,
     direction,
     target,
     viewport,
   }: {
-    distance: Camera["distance"];
     position: Camera["position"];
     viewport: Viewport;
   } & (
@@ -33,7 +33,6 @@ export class Camera {
         target: Position;
       }
   )) {
-    this.distance = distance;
     this.position = position;
     this.viewport = viewport;
     if (direction) this.direction = direction;
@@ -51,6 +50,10 @@ export class Camera {
     return this.direction;
   }
 
+  zoom(delta: number) {
+    this.position = this.position.scale(1 + delta);
+  }
+
   // rotate around the Z axis, vertically and horizontally to current viewport
   rotate(h: number, v: number) {
     const angleV = Math.asin(this.position.z / this.position.length);
@@ -58,10 +61,11 @@ export class Camera {
       Math.atan(this.position.y / this.position.x) +
       Math.PI * (this.position.x >= 0 ? 2 : 1);
 
+    const distance = this.distance;
     this.position.values = [
-      Math.cos(angleH + h) * this.distance,
-      Math.sin(angleH + h) * this.distance,
-      Math.sin(angleV + v) * this.distance,
+      Math.cos(angleH + h) * Math.cos(angleV + v) * distance,
+      Math.sin(angleH + h) * Math.cos(angleV + v) * distance,
+      Math.sin(angleV + v) * distance,
     ];
     this.targetAt(new Position(0, 0, 0));
   }
