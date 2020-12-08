@@ -86,7 +86,7 @@ float sphere_intersect(Sphere sphere, Ray ray) {
 // ---
 
 uniform vec2 u_resolution;
-uniform int u_max_reflect_times;
+uniform int u_maxReflectTimes;
 
 uniform float u_castRange;
 uniform bool u_enableDirectLight;
@@ -128,7 +128,7 @@ float getSine(vec3 a, vec3 b) {
 vec4 shade(Ray ray) {
   vec4 color = vec4(0, 0, 0, 1);
   int depth = 0;
-  while (depth < u_max_reflect_times) {
+  while (depth < u_maxReflectTimes) {
     vec4 rayColor = vec4(0, 0, 0, 1);
     Closest closest = getClosestSphereIndex(ray);
     Sphere sphere = u_spheres[closest.index]; // unsafe access?

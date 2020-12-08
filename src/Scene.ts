@@ -15,7 +15,7 @@ export class Scene {
   configs = {
     maxReflectTimes: 8,
     castRange: 0.7,
-    enableDirectLight: false,
+    enableDirectLight: true,
     enableDiffuse: true,
     enableSpecular: true,
   };

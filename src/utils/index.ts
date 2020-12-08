@@ -28,10 +28,20 @@ export function assert<T>(
 export function updateIfNotEqual<T, K extends keyof T>(
   target: T,
   property: K,
-  value: T[K]
+  value: Partial<T[K]>
 ) {
   if (target[property] !== value) {
-    target[property] = value;
+    if (target[property] && isPlainObject(value)) {
+      for (const key in value) {
+        updateIfNotEqual(
+          target[property],
+          key,
+          value[key] as T[K][keyof Partial<T[K]>]
+        );
+      }
+    } else {
+      target[property] = value as T[K];
+    }
   }
 }
 
@@ -117,4 +127,8 @@ export function handlePointerEvents(
         break;
     }
   });
+}
+
+export function isPlainObject(o: unknown) {
+  return typeof o === "object" && o?.constructor === Object;
 }
