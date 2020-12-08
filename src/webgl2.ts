@@ -75,13 +75,14 @@ export function createRender(
   }
 
   return function render() {
-    setupState(gl, program);
+    gl.useProgram(program);
+    gl.bindVertexArray(vao); // necessary? why?
 
     gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
     gl.clearColor(0, 0, 0, 0);
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-    gl.useProgram(program);
-    gl.bindVertexArray(vao); // necessary? why?
+
+    setupState(gl, program);
 
     gl.drawArrays(gl.TRIANGLES, 0, 3);
   };
