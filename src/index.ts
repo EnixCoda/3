@@ -7,6 +7,7 @@ import fragmentShaderSource from "./shaders/fragment.glsl";
 import vertexShaderSource from "./shaders/vertex.glsl";
 import { Sphere } from "./Shapes";
 import { handlePointerEvents, updateIfNotEqual } from "./utils";
+import { transform, uniform } from "./utils/v";
 import { mountVariantsControl } from "./variantsControl";
 import { Position } from "./Vector";
 import { createRender, createWebGL2Context, getCanvasSize } from "./webgl2";
@@ -18,149 +19,111 @@ function setupState(gl: WebGL2RenderingContext, program: WebGLProgram) {
   const { width, height } = getCanvasSize(gl);
 
   updateIfNotEqual(gl, "canvas", { width, height });
+
+  uniform(`u_ambient`).vec4().bind(gl, program).feed(scene.ambient.rgb);
+  uniform(`u_background`).vec4().bind(gl, program).feed(scene.background.rgb);
+
+  // config uniforms
+  uniform(`u_maxReflectTimes`)
+    .int()
+    .bind(gl, program)
+    .feed(scene.configs.maxReflectTimes);
+
+  uniform(`u_castRange`)
+    .float()
+    .bind(gl, program)
+    .feed(scene.configs.castRange);
+
+  uniform(`u_enableDirectLight`)
+    .bool()
+    .bind(gl, program)
+    .feed(scene.configs.enableDirectLight);
+
+  uniform(`u_enableDiffuse`)
+    .bool()
+    .bind(gl, program)
+    .feed(scene.configs.enableDiffuse);
+
+  uniform(`u_enableSpecular`)
+    .bool()
+    .bind(gl, program)
+    .feed(scene.configs.enableSpecular);
+
+  // uniform resolution
+  uniform(`u_resolution`)
+    .vec2()
+    .bind(gl, program)
+    .feed([scene.camera.viewport.width, scene.camera.viewport.height]);
+
+  // uniform light
+  scene.lights.forEach((light, i) => {
+    uniform(`${`u_lights`}[${i}]`)
+      .struct({
+        position: "vec3",
+        diffuse: "vec4",
+        specular: "vec4",
+      })
+      .bind(gl, program)
+      .feed(
+        transform(light, {
+          position: (v) => v.xyz,
+          diffuse: (v) => v.rgb,
+          specular: (v) => v.rgb,
+        })
+      );
+  });
+
+  // uniform sphere
+  scene.shapes.forEach((shape, i) => {
+    uniform(`${`u_spheres`}[${i}]`)
+      .struct({
+        position: "vec3",
+        material: {
+          shininess: "float",
+          ambient: "vec4",
+          diffuse: "vec4",
+          specular: "vec4",
+          reflectivity: "vec4",
+        },
+        radius: "float",
+      })
+      .bind(gl, program)
+      .feed(
+        transform(shape, {
+          position: (v) => v.xyz,
+          material: {
+            ambient: (v) => v.rgb,
+            diffuse: (v) => v.rgb,
+            specular: (v) => v.rgb,
+            reflectivity: (v) => v.rgb,
+          },
+        })
+      );
+  });
+
+  // uniform camera
   updateIfNotEqual(scene.camera, "viewport", {
     width,
     height,
     depth: Math.min(width, height) * 3,
   });
-
-  // uniform ambient
-  {
-    gl.uniform4f(
-      gl.getUniformLocation(program, `u_ambient`),
-      ...scene.ambient.rgb,
-      1
+  uniform(`u_camera`)
+    .struct({
+      position: "vec3",
+      direction: "vec3",
+      viewport: {
+        width: "float",
+        height: "float",
+        depth: "float",
+      },
+    })
+    .bind(gl, program)
+    .feed(
+      transform(scene.camera, {
+        position: (v) => v.xyz,
+        direction: (value) => value.xyz,
+      })
     );
-  }
-
-  // uniform background
-  {
-    gl.uniform4f(
-      gl.getUniformLocation(program, `u_background`),
-      ...scene.background.rgb,
-      1
-    );
-  }
-
-  // config uniforms
-  {
-    gl.uniform1i(
-      gl.getUniformLocation(program, `u_maxReflectTimes`),
-      scene.configs.maxReflectTimes
-    );
-    gl.uniform1f(
-      gl.getUniformLocation(program, `u_castRange`),
-      scene.configs.castRange
-    );
-    gl.uniform1i(
-      gl.getUniformLocation(program, `u_enableDirectLight`),
-      scene.configs.enableDirectLight as any
-    );
-    gl.uniform1i(
-      gl.getUniformLocation(program, `u_enableDiffuse`),
-      scene.configs.enableDiffuse as any
-    );
-    gl.uniform1i(
-      gl.getUniformLocation(program, `u_enableSpecular`),
-      scene.configs.enableSpecular as any
-    );
-  }
-
-  // uniform resolution
-  {
-    gl.uniform2f(
-      gl.getUniformLocation(program, `u_resolution`),
-      scene.camera.viewport.width,
-      scene.camera.viewport.height
-    );
-  }
-
-  // uniform light
-  {
-    const uniform = `u_lights`;
-    scene.lights.forEach((light, i) => {
-      const target = `${uniform}[${i}]`;
-      gl.uniform3f(
-        gl.getUniformLocation(program, `${target}.position`),
-        ...light.position.xyz
-      );
-      gl.uniform4f(
-        gl.getUniformLocation(program, `${target}.diffuse`),
-        ...light.diffuse.rgb,
-        1
-      );
-      gl.uniform4f(
-        gl.getUniformLocation(program, `${target}.specular`),
-        ...light.specular.rgb,
-        1
-      );
-    });
-  }
-
-  // uniform sphere
-  {
-    const uniform = `u_spheres`;
-    scene.shapes.forEach((shape, i) => {
-      const target = `${uniform}[${i}]`;
-      gl.uniform3f(
-        gl.getUniformLocation(program, `${target}.position`),
-        ...shape.position.xyz
-      );
-      gl.uniform1f(
-        gl.getUniformLocation(program, `${target}.material.shininess`),
-        shape.material.shininess
-      );
-      gl.uniform4f(
-        gl.getUniformLocation(program, `${target}.material.ambient`),
-        ...shape.material.ambient.rgb,
-        1
-      );
-      gl.uniform4f(
-        gl.getUniformLocation(program, `${target}.material.diffuse`),
-        ...shape.material.diffuse.rgb,
-        1
-      );
-      gl.uniform4f(
-        gl.getUniformLocation(program, `${target}.material.specular`),
-        ...shape.material.specular.rgb,
-        1
-      );
-      gl.uniform4f(
-        gl.getUniformLocation(program, `${target}.material.reflectivity`),
-        ...shape.material.reflectivity.rgb,
-        1
-      );
-      gl.uniform1f(
-        gl.getUniformLocation(program, `${target}.radius`),
-        (shape as Sphere).radius
-      );
-    });
-  }
-
-  // uniform camera
-  {
-    const target = `u_camera`;
-    gl.uniform3f(
-      gl.getUniformLocation(program, `${target}.position`),
-      ...scene.camera.position.xyz
-    );
-    gl.uniform3f(
-      gl.getUniformLocation(program, `${target}.direction`),
-      ...scene.camera.direction.xyz
-    );
-    gl.uniform1f(
-      gl.getUniformLocation(program, `${target}.viewport.width`),
-      scene.camera.viewport.width
-    );
-    gl.uniform1f(
-      gl.getUniformLocation(program, `${target}.viewport.height`),
-      scene.camera.viewport.height
-    );
-    gl.uniform1f(
-      gl.getUniformLocation(program, `${target}.viewport.depth`),
-      scene.camera.viewport.depth
-    );
-  }
 }
 
 export const render = createRender(
