@@ -55,4 +55,8 @@ export class Color {
     result.blue += color.blue;
     return result;
   }
+
+  get rgb() {
+    return [this.red, this.green, this.blue] as [number, number, number];
+  }
 }

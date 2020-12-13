@@ -17,6 +17,10 @@ export class Vector<V = any> {
     return this.values[2];
   }
 
+  get xyz() {
+    return [this.x, this.y, this.z] as [number, number, number];
+  }
+
   constructor(values?: Vector["values"]) {
     if (values) for (const value of values) this.values.push(value);
   }

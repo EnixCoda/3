@@ -28,9 +28,7 @@ function setupState(gl: WebGL2RenderingContext, program: WebGLProgram) {
   {
     gl.uniform4f(
       gl.getUniformLocation(program, `u_ambient`),
-      scene.ambient.red,
-      scene.ambient.green,
-      scene.ambient.blue,
+      ...scene.ambient.rgb,
       1
     );
   }
@@ -39,9 +37,7 @@ function setupState(gl: WebGL2RenderingContext, program: WebGLProgram) {
   {
     gl.uniform4f(
       gl.getUniformLocation(program, `u_background`),
-      scene.background.red,
-      scene.background.green,
-      scene.background.blue,
+      ...scene.background.rgb,
       1
     );
   }
@@ -86,20 +82,16 @@ function setupState(gl: WebGL2RenderingContext, program: WebGLProgram) {
       const target = `${uniform}[${i}]`;
       gl.uniform3f(
         gl.getUniformLocation(program, `${target}.position`),
-        ...(light.position.values as [number, number, number])
+        ...light.position.xyz
       );
       gl.uniform4f(
         gl.getUniformLocation(program, `${target}.diffuse`),
-        light.diffuse.red,
-        light.diffuse.green,
-        light.diffuse.blue,
+        ...light.diffuse.rgb,
         1
       );
       gl.uniform4f(
         gl.getUniformLocation(program, `${target}.specular`),
-        light.specular.red,
-        light.specular.green,
-        light.specular.blue,
+        ...light.specular.rgb,
         1
       );
     });
@@ -112,7 +104,7 @@ function setupState(gl: WebGL2RenderingContext, program: WebGLProgram) {
       const target = `${uniform}[${i}]`;
       gl.uniform3f(
         gl.getUniformLocation(program, `${target}.position`),
-        ...(shape.position.values as [number, number, number])
+        ...shape.position.xyz
       );
       gl.uniform1f(
         gl.getUniformLocation(program, `${target}.material.shininess`),
@@ -120,30 +112,22 @@ function setupState(gl: WebGL2RenderingContext, program: WebGLProgram) {
       );
       gl.uniform4f(
         gl.getUniformLocation(program, `${target}.material.ambient`),
-        shape.material.ambient.red,
-        shape.material.ambient.green,
-        shape.material.ambient.blue,
+        ...shape.material.ambient.rgb,
         1
       );
       gl.uniform4f(
         gl.getUniformLocation(program, `${target}.material.diffuse`),
-        shape.material.diffuse.red,
-        shape.material.diffuse.green,
-        shape.material.diffuse.blue,
+        ...shape.material.diffuse.rgb,
         1
       );
       gl.uniform4f(
         gl.getUniformLocation(program, `${target}.material.specular`),
-        shape.material.specular.red,
-        shape.material.specular.green,
-        shape.material.specular.blue,
+        ...shape.material.specular.rgb,
         1
       );
       gl.uniform4f(
         gl.getUniformLocation(program, `${target}.material.reflectivity`),
-        shape.material.reflectivity.red,
-        shape.material.reflectivity.green,
-        shape.material.reflectivity.blue,
+        ...shape.material.reflectivity.rgb,
         1
       );
       gl.uniform1f(
@@ -158,11 +142,11 @@ function setupState(gl: WebGL2RenderingContext, program: WebGLProgram) {
     const target = `u_camera`;
     gl.uniform3f(
       gl.getUniformLocation(program, `${target}.position`),
-      ...(scene.camera.position.values as [number, number, number])
+      ...scene.camera.position.xyz
     );
     gl.uniform3f(
       gl.getUniformLocation(program, `${target}.direction`),
-      ...(scene.camera.direction.values as [number, number, number])
+      ...scene.camera.direction.xyz
     );
     gl.uniform1f(
       gl.getUniformLocation(program, `${target}.viewport.width`),
