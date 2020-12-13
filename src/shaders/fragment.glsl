@@ -125,16 +125,19 @@ float getSine(vec3 a, vec3 b) {
   return length(cross(a, b)) / (length(a) * length(b));
 }
 
+float getCosine(vec3 a, vec3 b) { return dot(normalize(a), normalize(b)); }
+
 vec4 shade(Ray ray) {
   vec4 color = vec4(0, 0, 0, 1);
   int depth = 0;
+  vec4 reflectivity = vec4(1, 1, 1, 1);
   while (depth < u_maxReflectTimes) {
     vec4 rayColor = vec4(0, 0, 0, 1);
     Closest closest = getClosestSphereIndex(ray);
     Sphere sphere = u_spheres[closest.index]; // unsafe access?
     vec3 p = ray_reach(ray, closest.scale);
 
-    if (u_enableDirectLight) {
+    if (u_enableDirectLight || depth == 0) {
       for (int i = 0; i < amountOfLights; i++) {
         Light light = u_lights[i];
 
@@ -166,14 +169,15 @@ vec4 shade(Ray ray) {
     }
 
     if (closest.index == -1) {
-      rayColor += u_background;
-      color += rayColor;
-      break;
+      if (depth == 0) {
+        // ignore background on reflection
+        rayColor += u_background;
+      }
     } else {
       vec3 n = normalize(p - sphere.position);
 
-      rayColor += u_ambient * sphere.material.ambient *
-                  dot(normalize(ray.direction), -n);
+      rayColor +=
+          u_ambient * sphere.material.ambient * getCosine(ray.direction, -n);
 
       for (int i = 0; i < amountOfLights; i++) {
         Light light = u_lights[i];
@@ -218,10 +222,15 @@ vec4 shade(Ray ray) {
         vec3 l = normalize(-ray.direction);
         vec3 r = n * 2. * dot(n, l) - l;
         ray = Ray(p, r);
-        depth++;
       }
-      color += rayColor * sphere.material.reflectivity;
     }
+
+    color += rayColor * reflectivity;
+    reflectivity = sphere.material.reflectivity;
+    if (closest.index == -1) {
+      break;
+    }
+    depth++;
   }
   return color;
 }
