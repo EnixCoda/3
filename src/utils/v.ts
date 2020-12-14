@@ -16,25 +16,27 @@ type Assign<T> =
       [key in keyof T]?: Assign<T[key]>;
     };
 
+type ExpectedAny = any;
+
 const primitiveAssignMap = {
   bool: <AssignFn<boolean>>(
-    ((gl) => (location) => (value) => gl.uniform1i(location, value as any))
+    ((gl, location) => (value) => gl.uniform1i(location, value as ExpectedAny))
   ),
   int: <AssignFn<number>>(
-    ((gl) => (location) => (value) => gl.uniform1i(location, value))
+    ((gl, location) => (value) => gl.uniform1i(location, value))
   ),
   float: <AssignFn<number>>(
-    ((gl) => (location) => (value) => gl.uniform1f(location, value))
+    ((gl, location) => (value) => gl.uniform1f(location, value))
   ),
   vec2: <AssignFn<number[]>>(
-    ((gl) => (location) => (values) =>
+    ((gl, location) => (values) =>
       gl.uniform2f(location, ...(values as [number, number])))
   ),
   vec3: <AssignFn<number[]>>(
-    ((gl) => (location) => (values) =>
+    ((gl, location) => (values) =>
       gl.uniform3f(location, ...(values as [number, number, number])))
   ),
-  vec4: <AssignFn<number[]>>((gl) => (location) => (values) => {
+  vec4: <AssignFn<number[]>>((gl, location) => (values) => {
     const [r = 0, g = 0, b = 0, a = 1] = values;
     gl.uniform4f(location, r, g, b, a);
   }),
@@ -45,8 +47,9 @@ function getAssignPrimitive(type: Primitive) {
 }
 
 type AssignFn<T> = (
-  gl: WebGL2RenderingContext
-) => (location: WebGLUniformLocation) => (values: T) => void;
+  gl: WebGL2RenderingContext,
+  location: WebGLUniformLocation
+) => (values: T) => void;
 
 function getAssignStruct<T>(des: StructDescription<T>): Assign<T> {
   const assign: Assign<any> = {};
@@ -71,7 +74,7 @@ export function uniform<T>(name: string) {
           if (!location) throw new Error();
           return {
             feed(data: Value) {
-              assign(gl)(location)(data as any);
+              assign(gl, location)(data);
             },
           };
         },
@@ -88,7 +91,7 @@ export function uniform<T>(name: string) {
               case "function":
                 const location = gl.getUniformLocation(program, scope);
                 if (!location) throw new Error();
-                assign(gl)(location)(data);
+                assign(gl, location)(data);
                 break;
               case "object":
                 for (const key in assign) {
