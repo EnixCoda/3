@@ -92,6 +92,7 @@ uniform float u_castRange;
 uniform bool u_enableDirectLight;
 uniform bool u_enableDiffuse;
 uniform bool u_enableSpecular;
+uniform bool u_enableGlow;
 
 uniform vec4 u_background;
 uniform vec4 u_ambient;
@@ -156,9 +157,11 @@ vec4 shade(Ray ray) {
           rayColor += lightColor;
         } else {
           // glow
-          float c = dot(normalize(sphere.position - p), ray.direction);
-          if (c < 0.1)
-            rayColor += light.specular * pow(1. - c, pow(2., 3.)) * 2.;
+          if (u_enableGlow) {
+            float c = dot(normalize(sphere.position - p), ray.direction);
+            if (c < 0.1)
+              rayColor += light.specular * pow(1. - c, pow(2., 3.)) * 2.;
+          }
         }
       }
     }
