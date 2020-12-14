@@ -61,17 +61,15 @@ export function createPlayControl(fn: (playtime: number) => void) {
   let lastRecordTime = 0;
   let playSpeed = 1;
   let playForward = true;
-  function loop() {
+
+  run(function loop() {
     requestAnimationFrame(() => {
-      if (playing) {
-        fn(getPlaytime());
-        loop();
-      }
+      fn(getPlaytime());
+      loop();
     });
-  }
+  });
 
   function play() {
-    if (!playing) loop();
     playing = true;
     lastRecordTime = +Date.now();
   }
