@@ -149,22 +149,17 @@ vec4 shade(Ray ray) {
           continue;
         }
 
-        if (closest.index != -1) {
-          // blocked by another sphere
-          if (length(ray.position - p) < length(toTheLight) * theCosine) {
-            // glow
-            float c = dot(normalize(sphere.position - p), ray.direction);
-            if (c * sphere.radius < u_castRange * 2.)
-              rayColor += light.specular * pow(1. - c, pow(2., 5.));
-
-            continue;
-          }
+        if (closest.index == -1) {
+          vec4 lightColor =
+              pow(1. - distanceToTheLight / u_castRange, pow(2., 4.)) *
+              light.specular;
+          rayColor += lightColor;
+        } else {
+          // glow
+          float c = dot(normalize(sphere.position - p), ray.direction);
+          if (c < 0.1)
+            rayColor += light.specular * pow(1. - c, pow(2., 3.)) * 2.;
         }
-
-        vec4 lightColor =
-            pow(1. - distanceToTheLight / u_castRange, pow(2., 4.)) *
-            light.specular;
-        rayColor += lightColor;
       }
     }
 

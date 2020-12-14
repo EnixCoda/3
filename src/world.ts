@@ -23,7 +23,7 @@ const shapes = [
     new Position(4, 4, 0),
     2,
     new Material(
-      Color.fromHex(0xaaaaaa),
+      Color.fromHex(0x444444),
       Color.fromHex(0x000000),
       Color.fromHex(0xcccccc),
       2,
@@ -34,7 +34,7 @@ const shapes = [
     new Position(0, 3, 3),
     1,
     new Material(
-      Color.fromHex(0xaaaaaa),
+      Color.fromHex(0x444444),
       Color.fromHex(0x000000),
       Color.fromHex(0xcccccc),
       2,
@@ -45,7 +45,7 @@ const shapes = [
     new Position(2, 0, 2),
     1,
     new Material(
-      Color.fromHex(0xaaaaaa),
+      Color.fromHex(0x444444),
       Color.fromHex(0x000000),
       Color.fromHex(0xcccccc),
       2,
@@ -74,8 +74,7 @@ const lights = [
 ];
 scene.lights.push(...lights);
 
-// const ambient = Color.fromHex(0x000000);
-const ambient = Color.fromHex(0x111111);
+const ambient = Color.fromHex(0x444444);
 scene.ambient = ambient;
-const background = Color.fromHex(0x222222);
+const background = Color.fromHex(0x111111);
 scene.background = background;
