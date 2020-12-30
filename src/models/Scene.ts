@@ -1,6 +1,6 @@
 import { Camera } from "./Camera";
 import { Color } from "./Color";
-import { Light } from "./Lights";
+import { Light } from "./Light";
 import { Ray } from "./Ray";
 import { Shape } from "./Shapes";
 import { Direction } from "./Vector";

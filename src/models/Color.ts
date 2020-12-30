@@ -1,4 +1,4 @@
-import { clamp } from "./utils";
+import { clamp } from "../utils";
 
 export class Color {
   static fromHex(hex: number) {

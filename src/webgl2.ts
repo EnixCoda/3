@@ -16,6 +16,7 @@ function createShader(
 
   throw new Error(`Error creating shader:` + gl.getShaderInfoLog(shader));
 }
+
 function createProgram(
   gl: WebGL2RenderingContext,
   vertexShader: WebGLShader,
@@ -32,6 +33,7 @@ function createProgram(
 
   throw new Error(`Error creating program:` + gl.getProgramInfoLog(program));
 }
+
 export function createRender(
   gl: WebGL2RenderingContext,
   vertexShaderSource: string,

@@ -1,10 +1,10 @@
-import { Camera } from "./Camera";
-import { Color } from "./Color";
-import { Light } from "./Lights";
-import { Material } from "./Material";
-import { Scene } from "./Scene";
-import { Sphere } from "./Shapes";
-import { Position } from "./Vector";
+import { Camera } from "./models/Camera";
+import { Color } from "./models/Color";
+import { Light } from "./models/Light";
+import { Material } from "./models/Material";
+import { Scene } from "./models/Scene";
+import { Sphere } from "./models/Shapes";
+import { Position } from "./models/Vector";
 
 const camera = new Camera({
   position: new Position(-1, -1, 0),

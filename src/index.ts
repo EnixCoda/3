@@ -2,14 +2,14 @@ import React from "react";
 import ReactDOM from "react-dom";
 import { withFPS } from "./FPSMeter";
 import { Marker1D, Marker2D } from "./Marker";
+import { Sphere } from "./models/Shapes";
+import { Position } from "./models/Vector";
 import { createPlayControl, PlayControl } from "./playControl";
 import fragmentShaderSource from "./shaders/fragment.glsl";
 import vertexShaderSource from "./shaders/vertex.glsl";
-import { Sphere } from "./Shapes";
 import { handlePointerEvents, updateIfNotEqual } from "./utils";
 import { transform, uniform } from "./utils/v";
 import { mountVariantsControl } from "./variantsControl";
-import { Position } from "./Vector";
 import { createRender, createWebGL2Context, getCanvasSize } from "./webgl2";
 import { scene } from "./world";
 

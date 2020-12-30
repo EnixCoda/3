@@ -1,9 +1,9 @@
 import { GUI } from "dat.gui";
-import { Color } from "../Color";
-import { Light } from "../Lights";
-import { Material } from "../Material";
-import { Sphere } from "../Shapes";
-import { Direction, Position, Vector } from "../Vector";
+import { Color } from "../models/Color";
+import { Light } from "../models/Light";
+import { Material } from "../models/Material";
+import { Sphere } from "../models/Shapes";
+import { Direction, Position, Vector } from "../models/Vector";
 
 function addColor(g: GUI, target: Color, name: string, onChange: () => void) {
   return g
