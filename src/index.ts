@@ -2,6 +2,7 @@ import React from "react";
 import ReactDOM from "react-dom";
 import { withFPS } from "./FPSMeter";
 import { Marker1D, Marker2D } from "./Marker";
+import { Light } from "./models/Light";
 import { Sphere } from "./models/Shapes";
 import { Position } from "./models/Vector";
 import { createPlayControl, PlayControl } from "./playControl";
@@ -20,50 +21,50 @@ function setupState(gl: WebGL2RenderingContext, program: WebGLProgram) {
 
   updateIfNotEqual(gl, "canvas", { width, height });
 
-  uniform(`u_ambient`).vec4().bind(gl, program).feed(scene.ambient.rgb);
-  uniform(`u_background`).vec4().bind(gl, program).feed(scene.background.rgb);
+  uniform.vec4().bind(gl, program, `u_ambient`).feed(scene.ambient.rgb);
+  uniform.vec4().bind(gl, program, `u_background`).feed(scene.background.rgb);
 
   // config uniforms
-  uniform(`u_maxReflectTimes`)
+  uniform
     .int()
-    .bind(gl, program)
+    .bind(gl, program, `u_maxReflectTimes`)
     .feed(scene.configs.maxReflectTimes);
 
-  uniform(`u_castRange`)
+  uniform
     .float()
-    .bind(gl, program)
+    .bind(gl, program, `u_castRange`)
     .feed(scene.configs.castRange);
 
-  uniform(`u_enableDirectLight`)
+  uniform
     .bool()
-    .bind(gl, program)
+    .bind(gl, program, `u_enableDirectLight`)
     .feed(scene.configs.enableDirectLight);
 
-  uniform(`u_enableDiffuse`)
+  uniform
     .bool()
-    .bind(gl, program)
+    .bind(gl, program, `u_enableDiffuse`)
     .feed(scene.configs.enableDiffuse);
 
-  uniform(`u_enableSpecular`)
+  uniform
     .bool()
-    .bind(gl, program)
+    .bind(gl, program, `u_enableSpecular`)
     .feed(scene.configs.enableSpecular);
 
   // uniform resolution
-  uniform(`u_resolution`)
+  uniform
     .vec2()
-    .bind(gl, program)
+    .bind(gl, program, `u_resolution`)
     .feed([scene.camera.viewport.width, scene.camera.viewport.height]);
 
   // uniform light
   scene.lights.forEach((light, i) => {
-    uniform(`${`u_lights`}[${i}]`)
-      .struct({
+    uniform
+      .struct<Light>({
         position: "vec3",
         diffuse: "vec4",
         specular: "vec4",
       })
-      .bind(gl, program)
+      .bind(gl, program, `${`u_lights`}[${i}]`)
       .feed(
         transform(light, {
           position: (v) => v.xyz,
@@ -75,7 +76,7 @@ function setupState(gl: WebGL2RenderingContext, program: WebGLProgram) {
 
   // uniform sphere
   scene.shapes.forEach((shape, i) => {
-    uniform(`${`u_spheres`}[${i}]`)
+    uniform
       .struct({
         position: "vec3",
         material: {
@@ -87,7 +88,7 @@ function setupState(gl: WebGL2RenderingContext, program: WebGLProgram) {
         },
         radius: "float",
       })
-      .bind(gl, program)
+      .bind(gl, program, `${`u_spheres`}[${i}]`)
       .feed(
         transform(shape, {
           position: (v) => v.xyz,
@@ -107,7 +108,7 @@ function setupState(gl: WebGL2RenderingContext, program: WebGLProgram) {
     height,
     depth: Math.min(width, height) * 3,
   });
-  uniform(`u_camera`)
+  uniform
     .struct({
       position: "vec3",
       direction: "vec3",
@@ -117,7 +118,7 @@ function setupState(gl: WebGL2RenderingContext, program: WebGLProgram) {
         depth: "float",
       },
     })
-    .bind(gl, program)
+    .bind(gl, program, `u_camera`)
     .feed(
       transform(scene.camera, {
         position: (v) => v.xyz,
