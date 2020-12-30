@@ -1,6 +1,6 @@
-import { Position } from "./Vector";
-import { Ray } from "./Ray";
 import { Material } from "./Material";
+import { Ray } from "./Ray";
+import { Position } from "./Vector";
 
 export abstract class Shape {
   abstract position: Position;
@@ -26,7 +26,9 @@ export class Sphere implements Shape {
 
   intersectPosition(ray: Ray): Position | undefined {
     const min = this.intersect(ray);
-    return min === undefined ? min : ray.position.add(ray.direction.scale(min));
+    return min === undefined
+      ? min
+      : Position.from(ray.position.add(ray.direction.scale(min)));
   }
 
   intersect(ray: Ray): number | undefined {

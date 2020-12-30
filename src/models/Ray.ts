@@ -1,4 +1,4 @@
-import { Position, Direction } from "./Vector";
+import { Direction, Position } from "./Vector";
 
 export class Ray {
   position: Position;
@@ -10,6 +10,6 @@ export class Ray {
   }
 
   reach(ratio: number): Position {
-    return this.position.add(this.direction.scale(ratio));
+    return Position.from(this.position.add(this.direction.scale(ratio)));
   }
 }

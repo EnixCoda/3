@@ -36,7 +36,7 @@ export class Scene {
 
     let color = shape.material.ambient.mix(ambient);
 
-    const n: Direction = p.sub(shape.position).normalize();
+    const n: Direction = Direction.from(p.sub(shape.position).normalize());
     for (const light of lights) {
       // shadow
       {
@@ -49,7 +49,7 @@ export class Scene {
       }
 
       {
-        const l: Direction = light.position.sub(p).normalize();
+        const l: Direction = Direction.from(light.position.sub(p).normalize());
         const nl = n.dotProduct(l);
         if (nl <= 0) {
           // light is incoming from back
@@ -79,7 +79,7 @@ export class Scene {
 
     // reflect
     {
-      const l: Direction = ray.direction.normalize().scale(-1);
+      const l: Direction = Direction.from(ray.direction.normalize().scale(-1));
       const r = n.scale(2 * n.dotProduct(l)).sub(l);
       const reflected = this.shade(new Ray(p, r), depth + 1);
       if (reflected !== background) color = color.overlay(reflected);

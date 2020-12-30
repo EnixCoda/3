@@ -51,7 +51,7 @@ export class Camera {
   }
 
   zoom(delta: number) {
-    this.position = this.position.scale(1 + delta);
+    this.position = Position.from(this.position.scale(1 + delta));
   }
 
   // rotate around the Z axis, vertically and horizontally to current viewport
@@ -81,7 +81,10 @@ export class Camera {
       const l = topLeft.scale(x).add(topRight.scale(width - x));
       const r = bottomLeft.scale(x).add(bottomRight.scale(width - x));
       for (let y = 0; y < height; ++y) {
-        const ray = new Ray(this.position, r.scale(y).add(l.scale(height - y)));
+        const ray = new Ray(
+          this.position,
+          Direction.from(r.scale(y).add(l.scale(height - y)))
+        );
         processor(x, y, ray);
       }
     }
@@ -108,7 +111,9 @@ export class Camera {
     for (const dv of [-1, 1]) {
       for (const dh of [-1, 1]) {
         results.push(
-          baseDirection.add(horizontal.scale(dh)).add(vertical.scale(dv))
+          Direction.from(
+            baseDirection.add(horizontal.scale(dh)).add(vertical.scale(dv))
+          )
         );
       }
     }
