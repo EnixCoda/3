@@ -138,7 +138,7 @@ vec4 shade(Ray ray) {
     Sphere sphere = u_spheres[closest.index]; // unsafe access?
     vec3 p = ray_reach(ray, closest.scale);
 
-    if (u_enableDirectLight || depth == 0) {
+    if (u_enableDirectLight) {
       for (int i = 0; i < amountOfLights; i++) {
         Light light = u_lights[i];
 
@@ -150,14 +150,16 @@ vec4 shade(Ray ray) {
           continue;
         }
 
-        if (closest.index == -1) {
+        if (closest.index == -1 ||
+            length(ray.position - p) > length(toTheLight) * theCosine) {
+          // Not blocked by sphere
           vec4 lightColor =
               pow(1. - distanceToTheLight / u_castRange, pow(2., 4.)) *
               light.specular;
           rayColor += lightColor;
         } else {
-          // glow
           if (u_enableGlow) {
+            // glow
             float c = dot(normalize(sphere.position - p), ray.direction);
             if (c < 0.1)
               rayColor += light.specular * pow(1. - c, pow(2., 3.)) * 2.;
