@@ -3,7 +3,7 @@ import { Color } from "../models/Color";
 import { Light } from "../models/Light";
 import { Material } from "../models/Material";
 import { Sphere } from "../models/Shapes";
-import { Direction, Position, Vector } from "../models/Vector";
+import { Direction, Position, Vector3D } from "../models/Vector";
 
 function addColor(g: GUI, target: Color, name: string, onChange: () => void) {
   return g
@@ -22,7 +22,7 @@ function addColor(g: GUI, target: Color, name: string, onChange: () => void) {
     });
 }
 
-function addVector(
+function addVector3D(
   g: GUI,
   target: Position | Direction,
   name: string,
@@ -47,14 +47,14 @@ function add(g: GUI, target: any, property: string, onChange: () => void) {
   const type: "color" | "number" | "vector" | "default" =
     target[property] instanceof Color
       ? "color"
-      : target[property] instanceof Vector
+      : target[property] instanceof Vector3D
       ? "vector"
       : "default";
   switch (type) {
     case "color":
       return addColor(g, target[property], property, onChange);
     case "vector":
-      return addVector(g, target[property], property, onChange);
+      return addVector3D(g, target[property], property, onChange);
     case "default":
       return g.add(target, property).onChange(onChange);
   }
@@ -69,8 +69,8 @@ export function addTree(
   keys.forEach((key) => {
     const value = target[key];
     if (typeof value === "object") {
-      if (value instanceof Vector) {
-        addVector(g, value, key, onChange);
+      if (value instanceof Vector3D) {
+        addVector3D(g, value, key, onChange);
       } else if (value instanceof Color) {
         addColor(g, value, key, onChange);
       } else {
