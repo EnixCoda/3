@@ -1,6 +1,6 @@
 # 3
 
-This is a toy project with features of visualizing 3D objects and ray tracing effects.
+This is a toy project of visualizing 3D objects with camera controls and ray tracing effects based on WebGL2.
 
 ![preview](public/preview.png)
 

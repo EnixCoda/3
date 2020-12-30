@@ -1,10 +1,16 @@
 import Stats from "stats.js";
 
-// FPS meter
 const stats = new Stats();
-stats.showPanel(0);
-document.body.appendChild(stats.dom);
+
+let enabled = false;
+function enable() {
+  enabled = true;
+  stats.showPanel(0);
+  document.body.appendChild(stats.dom);
+}
+
 export const withFPS = (fn: () => void) => {
+  if (!enabled) enable();
   stats.begin();
   fn();
   stats.end();

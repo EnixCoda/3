@@ -1,5 +1,8 @@
 #version 300 es
 
+// This shader is wrote in shader toy style,
+// which is not the usual way we implement shaders!
+
 const int amountOfSpheres = 3;
 const int amountOfLights = 3;
 

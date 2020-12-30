@@ -14,7 +14,14 @@ import { mountVariantsControl } from "./variantsControl";
 import { createRender, createWebGL2Context, getCanvasSize } from "./webgl2";
 import { scene } from "./world";
 
-const gl = createWebGL2Context();
+const gl = createWebGL2Context(document.querySelector("canvas"));
+if (!gl) {
+  ReactDOM.render(
+    React.createElement("div", {}, ["Please enable WebGL2 to see the view"]),
+    document.querySelector("#info")
+  );
+  throw new Error("WebGL2 is not supported");
+}
 
 function setupState(gl: WebGL2RenderingContext, program: WebGLProgram) {
   const { width, height } = getCanvasSize(gl);
@@ -180,7 +187,7 @@ function updateWithControls() {
   // rotate camera
   {
     const delta = cameraPositionMarker.delta();
-    if (delta.x || delta.y) {
+    if (gl && (delta.x || delta.y)) {
       const { v, h } = onPointerMovementAngle(
         delta.x,
         delta.y,

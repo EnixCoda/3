@@ -106,12 +106,8 @@ export function getCanvasSize(
       };
 }
 
-export function createWebGL2Context() {
-  const canvas = document.createElement("canvas");
+export function createWebGL2Context(canvas: HTMLCanvasElement | null) {
+  if (!canvas) throw new Error(`No canvas found`);
   const gl = canvas.getContext("webgl2");
-  if (!gl) throw new Error("WebGL2 context not supported");
-
-  document.body.append(canvas);
-
   return gl;
 }
