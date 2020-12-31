@@ -7,7 +7,7 @@ import { Sphere } from "./models/Shapes";
 import { Position } from "./models/Vector";
 
 const camera = new Camera({
-  position: new Position(-7, -7, 0),
+  position: new Position(16, 16, 0),
   target: new Position(0, 0, 0),
   viewport: {
     width: 1,

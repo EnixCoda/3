@@ -13,11 +13,13 @@ export class Scene {
   background: Color = Color.fromHex(0x000000);
 
   configs = {
-    maxReflectTimes: 8,
+    maxTraceTimes: 6,
     castRange: 0.7,
     enableDirectLight: true,
     enableDiffuse: true,
     enableSpecular: true,
+    enableRefraction: true,
+    refraction: 0.75,
   };
 
   constructor(camera: Camera) {
@@ -26,7 +28,7 @@ export class Scene {
 
   shade(ray: Ray, depth = 0) {
     const { camera, background, shapes, ambient, lights } = this;
-    if (depth >= this.configs.maxReflectTimes) return Color.fromHex(0x000000);
+    if (depth >= this.configs.maxTraceTimes) return Color.fromHex(0x000000);
 
     const closest = getClosestIntersect(ray, shapes);
     if (closest === undefined)

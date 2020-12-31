@@ -34,8 +34,8 @@ function setupState(gl: WebGL2RenderingContext, program: WebGLProgram) {
   // config uniforms
   uniform
     .int()
-    .bind(gl, program, `u_maxReflectTimes`)
-    .feed(scene.configs.maxReflectTimes);
+    .bind(gl, program, `u_maxTraceTimes`)
+    .feed(scene.configs.maxTraceTimes);
 
   uniform
     .float()
@@ -56,6 +56,16 @@ function setupState(gl: WebGL2RenderingContext, program: WebGLProgram) {
     .bool()
     .bind(gl, program, `u_enableSpecular`)
     .feed(scene.configs.enableSpecular);
+
+  uniform
+    .bool()
+    .bind(gl, program, `u_enableRefraction`)
+    .feed(scene.configs.enableRefraction);
+
+  uniform
+    .float()
+    .bind(gl, program, `u_refraction`)
+    .feed(scene.configs.refraction);
 
   // uniform resolution
   uniform

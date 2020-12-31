@@ -89,13 +89,15 @@ float sphere_intersect(Sphere sphere, Ray ray) {
 // ---
 
 uniform vec2 u_resolution;
-uniform int u_maxReflectTimes;
+uniform int u_maxTraceTimes;
 
 uniform float u_castRange;
 uniform bool u_enableDirectLight;
 uniform bool u_enableDiffuse;
 uniform bool u_enableSpecular;
 uniform bool u_enableGlow;
+uniform bool u_enableRefraction;
+uniform float u_refraction;
 
 uniform vec4 u_background;
 uniform vec4 u_ambient;
@@ -131,110 +133,141 @@ float getSine(vec3 a, vec3 b) {
 
 float getCosine(vec3 a, vec3 b) { return dot(normalize(a), normalize(b)); }
 
-vec4 shade(Ray ray) {
+int STAGE_REFLECT = 0;
+int STAGE_REFRACT = 1;
+int LAST_STAGE = 1;
+
+vec4 shade(Ray theRay) {
   vec4 color = vec4(0, 0, 0, 1);
-  int depth = 0;
-  vec4 reflectivity = vec4(1, 1, 1, 1);
-  while (depth < u_maxReflectTimes) {
-    vec4 rayColor = vec4(0, 0, 0, 1);
-    Closest closest = getClosestSphereIndex(ray);
-    Sphere sphere = u_spheres[closest.index]; // unsafe access?
-    vec3 p = ray_reach(ray, closest.scale);
 
-    if (u_enableDirectLight) {
-      for (int i = 0; i < amountOfLights; i++) {
-        Light light = u_lights[i];
+  int stage = 0;
+  while (stage <= LAST_STAGE) {
+    vec4 reflectivity = vec4(1, 1, 1, 1);
+    vec4 refractivity = vec4(1, 1, 1, 1);
+    Ray ray = Ray(theRay.position, theRay.direction);
+    int depth = 0;
+    while (depth < u_maxTraceTimes) {
+      vec4 rayColor = vec4(0, 0, 0, 1);
+      Closest closest = getClosestSphereIndex(ray);
+      Sphere sphere = u_spheres[closest.index]; // unsafe access?
+      vec3 p = ray_reach(ray, closest.scale);
 
-        vec3 toTheLight = light.position - ray.position;
-        float theSine = getSine(ray.direction, toTheLight);
-        float theCosine = dot(normalize(ray.direction), normalize(toTheLight));
-        float distanceToTheLight = length(toTheLight) * theSine;
-        if (distanceToTheLight > u_castRange || theCosine <= 0.) {
-          continue;
-        }
+      if (u_enableDirectLight) {
+        for (int i = 0; i < amountOfLights; i++) {
+          Light light = u_lights[i];
 
-        if (closest.index == -1 ||
-            length(ray.position - p) > length(toTheLight) * theCosine) {
-          // Not blocked by sphere
-          vec4 lightColor =
-              pow(1. - distanceToTheLight / u_castRange, pow(2., 4.)) *
-              light.specular;
-          rayColor += lightColor;
-        } else {
-          if (u_enableGlow) {
-            // glow
-            float c = dot(normalize(sphere.position - p), ray.direction);
-            if (c < 0.1)
-              rayColor += light.specular * pow(1. - c, pow(2., 3.)) * 2.;
-          }
-        }
-      }
-    }
-
-    if (closest.index == -1) {
-      if (depth == 0) {
-        // ignore background on reflection
-        rayColor += u_background;
-      }
-    } else {
-      vec3 n = normalize(p - sphere.position);
-
-      rayColor +=
-          u_ambient * sphere.material.ambient * getCosine(ray.direction, -n);
-
-      for (int i = 0; i < amountOfLights; i++) {
-        Light light = u_lights[i];
-
-        // shadow
-        {
-          Closest closest2 =
-              getClosestSphereIndex(Ray(light.position, p - light.position));
-          // no light or the ray from light is blocked by other shapes?
-          if (closest2.index == -1 || closest2.index != closest.index)
-            continue;
-        }
-
-        {
-          vec3 l = normalize(light.position - p);
-          float nl = dot(n, l);
-          if (nl <= 0.) {
-            // light is incoming from back
+          vec3 toTheLight = light.position - ray.position;
+          float theSine = getSine(ray.direction, toTheLight);
+          float theCosine =
+              dot(normalize(ray.direction), normalize(toTheLight));
+          float distanceToTheLight = length(toTheLight) * theSine;
+          if (distanceToTheLight > u_castRange || theCosine <= 0.) {
             continue;
           }
 
-          if (u_enableDiffuse) {
-            vec4 diffuse = sphere.material.diffuse * light.specular * nl;
-            rayColor += diffuse;
-          }
-
-          if (u_enableSpecular) {
-            vec3 r = n * 2. * nl - l;
-            vec3 v = normalize(u_camera.position - p);
-            float vr = dot(v, r);
-            if (vr > 0.) {
-              vec4 specular = light.specular * sphere.material.specular *
-                              pow(vr, sphere.material.shininess);
-              rayColor += specular;
+          if (closest.index == -1 ||
+              length(ray.position - p) > length(toTheLight) * theCosine) {
+            // Not blocked by sphere
+            vec4 lightColor =
+                pow(1. - distanceToTheLight / u_castRange, pow(2., 4.)) *
+                light.specular;
+            rayColor += lightColor;
+          } else {
+            if (u_enableGlow) {
+              // glow
+              float c = dot(normalize(sphere.position - p), ray.direction);
+              if (c < 0.1)
+                rayColor += light.specular * pow(1. - c, pow(2., 3.)) * 2.;
             }
           }
         }
       }
 
-      // reflect
-      {
-        vec3 l = normalize(-ray.direction);
-        vec3 r = n * 2. * dot(n, l) - l;
-        ray = Ray(p, r);
-      }
-    }
+      if (closest.index == -1) {
+        if (depth == 0) {
+          // ignore background on reflection
+          rayColor += u_background;
+        }
+      } else {
+        vec3 n = normalize(p - sphere.position);
 
-    color += rayColor * reflectivity;
-    reflectivity = sphere.material.reflectivity;
-    if (closest.index == -1) {
-      break;
+        rayColor +=
+            u_ambient * sphere.material.ambient * getCosine(ray.direction, -n);
+
+        for (int i = 0; i < amountOfLights; i++) {
+          Light light = u_lights[i];
+
+          // shadow
+          {
+            Closest closest2 =
+                getClosestSphereIndex(Ray(light.position, p - light.position));
+            // no light or the ray from light is blocked by other shapes?
+            if (closest2.index == -1 || closest2.index != closest.index)
+              continue;
+          }
+
+          {
+            vec3 l = normalize(light.position - p);
+            float nl = dot(n, l);
+            if (nl <= 0.) {
+              // light is incoming from back
+              continue;
+            }
+
+            if (u_enableDiffuse) {
+              vec4 diffuse = sphere.material.diffuse * light.specular * nl;
+              rayColor += diffuse;
+            }
+
+            if (u_enableSpecular) {
+              vec3 r = n * 2. * nl - l;
+              vec3 v = normalize(u_camera.position - p);
+              float vr = dot(v, r);
+              if (vr > 0.) {
+                vec4 specular = light.specular * sphere.material.specular *
+                                pow(vr, sphere.material.shininess);
+                rayColor += specular;
+              }
+            }
+          }
+        }
+
+        if (stage == STAGE_REFLECT) {
+          vec3 l = normalize(-ray.direction);
+          vec3 r = n * 2. * dot(n, l) - l;
+          ray = Ray(p, r);
+        } else if (stage == STAGE_REFRACT) {
+          if (u_enableRefraction) {
+            vec3 l = normalize(ray.direction);
+            Ray reverseInner = Ray(p, -(l - n * max(0., u_refraction)));
+            float scale = sphere_intersect(sphere, reverseInner);
+            vec3 pOut = p + scale * reverseInner.direction;
+
+            float scale2 = dot(p - sphere.position, reverseInner.direction) /
+                           dot(l, reverseInner.direction);
+            vec3 dOut = scale * reverseInner.direction - scale2 * l;
+
+            ray = Ray(pOut, dOut);
+          } else {
+            depth = u_maxTraceTimes;
+          }
+        }
+      }
+
+      if (stage == STAGE_REFLECT) {
+        color += rayColor * reflectivity;
+        reflectivity = sphere.material.reflectivity;
+      } else if (stage == STAGE_REFRACT) {
+        color += rayColor * refractivity;
+      }
+      if (closest.index == -1) {
+        break;
+      }
+      depth++;
     }
-    depth++;
+    stage++;
   }
+
   return color;
 }
 
