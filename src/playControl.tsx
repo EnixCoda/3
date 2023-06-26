@@ -26,9 +26,7 @@ function useRAFState<T>(cb: () => T) {
 
 const startTime = +Date.now();
 export function PlayControl({ playControl }: React.PropsWithChildren<Props>) {
-  const playtime = useRAFState(() =>
-    new Date(playControl.getPlaytime() + startTime).toLocaleTimeString()
-  );
+  const playtime = useRAFState(() => new Date(playControl.getPlaytime() + startTime).toLocaleTimeString());
   return (
     <div
       style={{
@@ -49,6 +47,9 @@ export function PlayControl({ playControl }: React.PropsWithChildren<Props>) {
         <button onClick={() => playControl.back()}>⏪</button>
         <button onClick={() => playControl.toggle()}>⏯</button>
         <button onClick={() => playControl.forward()}>⏩</button>
+      </div>
+      <div style={{ display: "inline-flex", justifyContent: "space-between" }}>
+        Playspeed: {playControl.getPlaySpeed()}x
       </div>
     </div>
   );
@@ -75,11 +76,7 @@ export function createPlayControl(fn: (playtime: number) => void) {
   }
 
   function getPlaytime() {
-    if (playing)
-      return (
-        lastProgress +
-        (+Date.now() - lastRecordTime) * playSpeed * (playForward ? 1 : -1)
-      );
+    if (playing) return lastProgress + (+Date.now() - lastRecordTime) * playSpeed * (playForward ? 1 : -1);
     return lastProgress;
   }
 
